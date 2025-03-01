@@ -18,7 +18,7 @@ import java.util.logging.Logger;
  * @author PC
  */
 public class DBultis implements Serializable{
-    private static final String DB_NAME = "test1";
+    private static final String DB_NAME = "lan1";
     private static final String DB_USERNAME = "sa";
     private static final String DB_PASSWORD = "12345";
     

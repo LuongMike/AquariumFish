@@ -124,7 +124,7 @@
                 </div>
             </div>
             <nav class="menu">
-                <a href="#">Trang chủ</a>
+                <a href="mainPage.jsp">Trang chủ</a>
                 <a href="#">Sản phẩm</a>
                 <a href="#">Giảm giá</a>
                 <a href="#">Mẫu hồ cá</a>
