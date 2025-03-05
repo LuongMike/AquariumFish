@@ -15,5 +15,6 @@
         <%
             session.invalidate(); // Hủy session để đăng xuất
             response.sendRedirect("mainPage.jsp"); // Chuyển hướng về trang chủ
-        %>    </body>
+        %>    
+    </body>
 </html>

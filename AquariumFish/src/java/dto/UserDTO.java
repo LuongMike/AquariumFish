@@ -10,43 +10,51 @@ package dto;
  * @author PC
  */
 public class UserDTO {
-    private String userId;
-    private String fullName;
-    private String roldId;
+    private int userId;
+    private String userName;
+    private String account;
     private String password;
+    private String email;
+    private String phone;
+    private String address;
+    private String role;   
 
     public UserDTO() {
     }
 
-    public UserDTO(String userId, String fullName, String roldId, String password) {
+    public UserDTO(int userId, String userName, String account, String password, String email, String phone, String address, String role) {
         this.userId = userId;
-        this.fullName = fullName;
-        this.roldId = roldId;
+        this.userName = userName;
+        this.account = account;
         this.password = password;
+        this.email = email;
+        this.phone = phone;
+        this.address = address;
+        this.role = role;
     }
 
-    public String getUserId() {
+    public int getUserId() {
         return userId;
     }
 
-    public void setUserId(String userId) {
+    public void setUserId(int userId) {
         this.userId = userId;
     }
 
-    public String getFullName() {
-        return fullName;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
-    public String getRoldId() {
-        return roldId;
+    public String getAccount() {
+        return account;
     }
 
-    public void setRoldId(String roldId) {
-        this.roldId = roldId;
+    public void setAccount(String account) {
+        this.account = account;
     }
 
     public String getPassword() {
@@ -57,10 +65,44 @@ public class UserDTO {
         this.password = password;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
     @Override
     public String toString() {
-        return "UserDTO{" + "userId=" + userId + ", fullName=" + fullName + ", roldId=" + roldId + ", password=" + password + '}';
+        return "UserDTO{" + "userId=" + userId + ", userName=" + userName + ", account=" + account + ", password=" + password + ", email=" + email + ", phone=" + phone + ", address=" + address + ", role=" + role + '}';
     }
     
     
+    
 }
+

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package ultis;
+package utils;
 
 import java.io.Serializable;
 import java.sql.Connection;
@@ -17,8 +17,8 @@ import java.util.logging.Logger;
  *
  * @author PC
  */
-public class DBultis implements Serializable{
-    private static final String DB_NAME = "lan1";
+public class DButils implements Serializable{
+    private static final String DB_NAME = "AquariumFishDB";
     private static final String DB_USERNAME = "sa";
     private static final String DB_PASSWORD = "12345";
     
@@ -36,9 +36,9 @@ public class DBultis implements Serializable{
             System.out.println(c);
                       
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(DBultis.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DButils.class.getName()).log(Level.SEVERE, null, ex);
         } catch (SQLException ex) {
-            Logger.getLogger(DBultis.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DButils.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }

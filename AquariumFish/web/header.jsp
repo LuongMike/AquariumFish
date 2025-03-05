@@ -4,6 +4,7 @@
     Author     : PC
 --%>
 
+<%@page import="dto.UserDTO"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="vi">
@@ -87,10 +88,6 @@
                 font-weight: bold;
             }
         </style>
-        <%
-            // Kiểm tra xem có user đăng nhập hay không
-            String user = (String) session.getAttribute("username");
-        %>
 
     </head>
     <body>
@@ -105,9 +102,13 @@
                 </div>
                 <div class="user-options">
                     <%
-                     if (user != null) { // Nếu đã đăng nhập
+                        // Lấy thông tin User từ session
+                        UserDTO user = (UserDTO) session.getAttribute("user");
+
+                        if (user != null) { // Nếu đã đăng nhập
 %>
-                    <span style="color: white;">Xin chào, <%= user%>!</span>
+
+                        Xin chào, <a href="infor.jsp?accountUser=<%= user.getAccount()%>" style="color: #333"><%= user.getUserName() %></a>
                     <a href="logout.jsp" style="color: red;">Đăng Xuất</a>
                     <%
                     } else { // Nếu chưa đăng nhập

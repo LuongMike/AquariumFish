@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.sql.Statement;
-import ultis.DBultis;
+import utils.DButils;
 
 /**
  *
@@ -25,15 +25,19 @@ public class UserDAO implements IDAO<UserDTO, String> {
 
     @Override
     public boolean create(UserDTO entity) {
-        String sql = "INSERT INTO [tblUsers] ([userId], [fullName], [roleId], [password])"
-                + "VALUES(?,?,?,?)";
+        String sql = "INSERT INTO [tblUser] ([userName], [account], [password], [email], [phone], [address], [role])"
+                + "VALUES(?,?,?,?,?,?,?)";
         try {
-            Connection conn = DBultis.getConnection();
+            Connection conn = DButils.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, entity.getUserId());
-            ps.setString(2, entity.getFullName());
-            ps.setString(3, entity.getRoldId());
-            ps.setString(4, entity.getPassword());
+            ps.setString(1, entity.getUserName());
+            ps.setString(2, entity.getAccount());
+            ps.setString(3, entity.getPassword());
+            ps.setString(4, entity.getEmail());
+            ps.setString(5, entity.getPhone());
+            ps.setString(6, entity.getAddress());
+            ps.setString(7, entity.getRole());
+
             int n = ps.executeUpdate();
             return n > 0;
         } catch (ClassNotFoundException ex) {
@@ -48,17 +52,22 @@ public class UserDAO implements IDAO<UserDTO, String> {
     @Override
     public List<UserDTO> readAll() {
         List<UserDTO> list = new ArrayList<UserDTO>();
-        String sql = "SELECT * FROM [tblUsers]";
+        String sql = "SELECT * FROM [tblUser]";
         try {
-            Connection conn = DBultis.getConnection();
+            Connection conn = DButils.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 UserDTO user = new UserDTO(
-                        rs.getString("userId"),
-                        rs.getString("fullName"),
-                        rs.getString("roleId"),
-                        rs.getString("password"));
+                        rs.getInt("userID"),
+                        rs.getString("userName"),
+                        rs.getString("account"),
+                        rs.getString("password"),
+                        rs.getString("email"),
+                        rs.getString("phone"),
+                        rs.getString("address"),
+                        rs.getString("role")
+                );
                 list.add(user);
             }
         } catch (ClassNotFoundException | SQLException ex) {
@@ -68,20 +77,50 @@ public class UserDAO implements IDAO<UserDTO, String> {
         return list;
     }
 
-    @Override
-    public UserDTO readbyID(String id) {
-        String sql = "SELECT * FROM [tblUsers] WHERE [userId] = ?";
+    public UserDTO readbyID(int id) {
+        String sql = "SELECT * FROM [tblUser] WHERE [userID] = ?";
         try {
-            Connection conn = DBultis.getConnection();
+            Connection conn = DButils.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, id);
+            ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return new UserDTO(
-                        rs.getString("userId"),
-                        rs.getString("fullName"),
-                        rs.getString("roleId"),
-                        rs.getString("password"));
+                        rs.getInt("userID"),
+                        rs.getString("userName"),
+                        rs.getString("account"),
+                        rs.getString("password"),
+                        rs.getString("email"),
+                        rs.getString("phone"),
+                        rs.getString("address"),
+                        rs.getString("role")
+                );
+            }
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
+        return null;
+    }
+    
+        public UserDTO readbyAccount(String account) {
+        String sql = "SELECT * FROM [tblUser] WHERE [account] = ?";
+        try {
+            Connection conn = DButils.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, account);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return new UserDTO(
+                        rs.getInt("userID"),
+                        rs.getString("userName"),
+                        rs.getString("account"),
+                        rs.getString("password"),
+                        rs.getString("email"),
+                        rs.getString("phone"),
+                        rs.getString("address"),
+                        rs.getString("role")
+                );
             }
         } catch (ClassNotFoundException | SQLException ex) {
             Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, null, ex);
@@ -92,18 +131,23 @@ public class UserDAO implements IDAO<UserDTO, String> {
 
     @Override
     public boolean update(UserDTO entity) {
-        String sql = "UPDATE [tblUsers] SET "
-                + "[fullName] = ?, "
-                + "[roleId] = ?, "
-                + "[password] = ?"
-                + "WHERE [userId] = ?, ";
+        String sql = "UPDATE [tblUser] SET "
+                + "[userName] = ?, "
+                + "[password] = ?, "
+                + "[email] = ?,"
+                + "[phone] = ?, "
+                + "[address] = ?, "
+                + "[role] = ?"
+                + "WHERE [userID] = ?";
         try {
-            Connection conn = DBultis.getConnection();
+            Connection conn = DButils.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, entity.getFullName());
-            ps.setString(2, entity.getRoldId());
-            ps.setString(3, entity.getPassword());
-            ps.setString(4, entity.getUserId());
+            ps.setString(1, entity.getUserName());
+            ps.setString(2, entity.getPassword());
+            ps.setString(3, entity.getEmail());
+            ps.setString(4, entity.getPhone());
+            ps.setString(5, entity.getAddress());
+            ps.setString(6, entity.getRole());
             int n = ps.executeUpdate();
             return n > 0;
 
@@ -114,12 +158,12 @@ public class UserDAO implements IDAO<UserDTO, String> {
     }
 
     @Override
-    public boolean delete(String id) {
-        String sql = "DELETE FROM [tblUsers] WHERE [userId] = ?";
+    public boolean delete(int id) {
+        String sql = "DELETE FROM [tblUser] WHERE [userID] = ?";
         try {
-            Connection conn = DBultis.getConnection();
+            Connection conn = DButils.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, id);
+            ps.setInt(1, id);
             int n = ps.executeUpdate();
             return n > 0;
         } catch (ClassNotFoundException | SQLException ex) {
@@ -131,20 +175,23 @@ public class UserDAO implements IDAO<UserDTO, String> {
     @Override
     public List<UserDTO> search(String searchTerm) {
         List<UserDTO> list = new ArrayList<>();
-        String sql = "SELECT [userId], [fulName], [roleId], [password] FROM [tblUsers]"
-                + "WHERE [userId] LIKE N'%" + searchTerm + "%'"
-                + "OR [fullName] LIKE N'%" + searchTerm + "%'"
-                + "OR [roleId] LIKE N'%" + searchTerm + "%'";
+        String sql = "SELECT [userID], [userName], [account], [password], [email], [phone], [address], [role] FROM [tblUser]"
+                + "WHERE [userName] LIKE N'%" + searchTerm + "%'"
+                + "OR [role] LIKE N'%" + searchTerm + "%'";
         try {
-            Connection conn = DBultis.getConnection();
+            Connection conn = DButils.getConnection();
             Statement st = conn.createStatement();
             ResultSet rs = st.executeQuery(sql);
             while (rs.next()) {
                 UserDTO user = new UserDTO(
-                        rs.getString("userId"),
-                        rs.getString("fullName"),
-                        rs.getString("roleId"),
-                        rs.getString("password")
+                        rs.getInt("userID"),
+                        rs.getString("userName"),
+                        rs.getString("account"),
+                        rs.getString("password"),
+                        rs.getString("email"),
+                        rs.getString("phone"),
+                        rs.getString("address"),
+                        rs.getString("role")
                 );
                 list.add(user);
             }

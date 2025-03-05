@@ -17,11 +17,11 @@ public interface IDAO<T, K> {
 
     List<T> readAll();
 
-    T readbyID(K id);
+//    T readbyID(K id);
 
     boolean update(T entity);
 
-    boolean delete(K id);
+    boolean delete(int id);
 
     List<T> search(String searchTerm);
 }
