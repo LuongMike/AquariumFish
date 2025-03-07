@@ -18,10 +18,9 @@ import utils.AuthenUtils;
 public class MainController extends HttpServlet {
 
     private UserDAO udao = new UserDAO();
-    
+
     private static final String LOGIN_PAGE = "login.jsp";
     private static final String SUCCESS_PAGE = "loginSuccessful.jsp";
-    private static final String INVALID_PAGE = "invalidAccountInformation.jsp";
     private static final String MAIN_PAGE = "mainPage.jsp";
 
     private String processLogin(HttpServletRequest request, HttpServletResponse response)
@@ -37,7 +36,7 @@ public class MainController extends HttpServlet {
             request.getSession().setAttribute("user", user);
             url = SUCCESS_PAGE;
         } else {
-            url = INVALID_PAGE;
+            request.setAttribute("loginError", "Tài khoản hoặc mật khẩu không đúng. Vui lòng thử lại!");
         }
         return url;
     }
@@ -57,6 +56,64 @@ public class MainController extends HttpServlet {
 //        return url;
 //    }
 
+    private String processUpdateUser(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String url = "infor.jsp"; // Trang thông tin cá nhân
+        try {
+            UserDTO user = (UserDTO) request.getSession().getAttribute("user");
+            if (user != null) {
+                String userName = request.getParameter("userName");
+                String email = request.getParameter("userEmail");
+                String phone = request.getParameter("userPhone");
+                String address = request.getParameter("userAddress");
+                String role = request.getParameter("userRole");
+
+                // Kiểm tra dữ liệu đầu vào
+                if (!AuthenUtils.isValidUserName(userName)) {
+                    request.setAttribute("errorMessage", "Tên người dùng không hợp lệ!");
+                    return url;
+                }
+                if (!AuthenUtils.isValidEmail(email)) {
+                    request.setAttribute("errorMessage", "Email không hợp lệ!");
+                    return url;
+                }
+                if (!AuthenUtils.isValidPhone(phone)) {
+                    request.setAttribute("errorMessage", "Số điện thoại không hợp lệ!");
+                    return url;
+                }
+                if (!AuthenUtils.isValidAddress(address)) {
+                    request.setAttribute("errorMessage", "Địa chỉ không hợp lệ!");
+                    return url;
+                }
+                if (!AuthenUtils.isValidRole(role)) {
+                    request.setAttribute("errorMessage", "Vai trò không hợp lệ!");
+                    return url;
+                }
+
+                // Nếu hợp lệ, cập nhật thông tin mới
+                user.setUserName(userName);
+                user.setEmail(email);
+                user.setPhone(phone);
+                user.setAddress(address);
+                user.setRole(role);
+
+                boolean updateSuccess = udao.update(user);
+
+                if (updateSuccess) {
+                    request.getSession().setAttribute("user", user);
+                    request.setAttribute("successMessage", "Cập nhật thành công!");
+                } else {
+                    request.setAttribute("errorMessage", "Cập nhật thất bại, vui lòng thử lại!");
+                }
+            } else {
+                request.setAttribute("errorMessage", "Không tìm thấy thông tin người dùng!");
+            }
+        } catch (Exception e) {
+            log("Error at processUpdateUser: " + e.toString());
+            request.setAttribute("errorMessage", "Đã xảy ra lỗi, vui lòng thử lại sau!");
+        }
+        return url;
+    }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -71,7 +128,9 @@ public class MainController extends HttpServlet {
                 url = processLogin(request, response);
             } else if (action.equals("logout")) {
                 url = processLogout(request, response);
-            } 
+            } else if (action.equals("update")) {
+                url = processUpdateUser(request, response);
+            }
         } catch (Exception e) {
             log("Error at MainController: " + e.toString());
         } finally {

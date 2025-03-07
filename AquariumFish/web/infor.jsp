@@ -15,7 +15,7 @@
                 text-align: center;
             }
 
-            h1 {
+            h1,h3 {
                 color: #0077cc;
                 margin-top: 20px;
             }
@@ -82,6 +82,27 @@
         <div class="container">
             <h1>Thông Tin Cá Nhân</h1>
 
+            <h3>Quản lý thông tin hồ sơ để bảo mật tài khoản</h3>
+
+            <%
+                String errorMessage = (String) request.getAttribute("errorMessage");
+                String successMessage = (String) request.getAttribute("successMessage");
+            %>
+
+            <% if (errorMessage != null) {%>
+            <div style="color: red; font-weight: bold; margin-bottom: 10px;">
+                <%= errorMessage%>
+            </div>
+            <% } %>
+
+            <% if (successMessage != null) {%>
+            <div style="color: green; font-weight: bold; margin-bottom: 10px;">
+                <%= successMessage%>
+            </div>
+            <% } %>
+
+
+
             <%            // Lấy thông tin user từ session
                 UserDTO user = (UserDTO) session.getAttribute("user");
             %>
@@ -91,6 +112,7 @@
                 <tr><th>User ID</th><td><%= user.getUserId()%></td></tr>
                 <tr><th>User Name</th><td><%= user.getUserName()%></td></tr>
                 <tr><th>Account</th><td><%= user.getAccount()%></td></tr>
+                <tr><th>Password</th><td><%= user.getPassword()%></td></tr>
                 <tr><th>Email</th><td><%= user.getEmail()%></td></tr>
                 <tr><th>Phone</th><td><%= user.getPhone()%></td></tr>
                 <tr><th>Address</th><td><%= user.getAddress()%></td></tr>
@@ -100,6 +122,7 @@
             <p style="color:red;">Không tìm thấy thông tin người dùng.</p>
             <% }%>
 
+            <a href="updateUser.jsp" class="back-link">Cập Nhật</a>
             <a href="mainPage.jsp" class="back-link">Quay lại</a>
         </div>
         <jsp:include page="footer.jsp" />

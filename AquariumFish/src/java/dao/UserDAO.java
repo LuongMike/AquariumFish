@@ -102,8 +102,8 @@ public class UserDAO implements IDAO<UserDTO, String> {
         }
         return null;
     }
-    
-        public UserDTO readbyAccount(String account) {
+
+    public UserDTO readbyAccount(String account) {
         String sql = "SELECT * FROM [tblUser] WHERE [account] = ?";
         try {
             Connection conn = DButils.getConnection();
@@ -133,24 +133,20 @@ public class UserDAO implements IDAO<UserDTO, String> {
     public boolean update(UserDTO entity) {
         String sql = "UPDATE [tblUser] SET "
                 + "[userName] = ?, "
-                + "[password] = ?, "
-                + "[email] = ?,"
+                + "[email] = ?, "
                 + "[phone] = ?, "
                 + "[address] = ?, "
-                + "[role] = ?"
+                + "[role] = ? "
                 + "WHERE [userID] = ?";
-        try {
-            Connection conn = DButils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (Connection conn = DButils.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, entity.getUserName());
-            ps.setString(2, entity.getPassword());
-            ps.setString(3, entity.getEmail());
-            ps.setString(4, entity.getPhone());
-            ps.setString(5, entity.getAddress());
-            ps.setString(6, entity.getRole());
-            int n = ps.executeUpdate();
-            return n > 0;
-
+            ps.setString(2, entity.getEmail());
+            ps.setString(3, entity.getPhone());
+            ps.setString(4, entity.getAddress());
+            ps.setString(5, entity.getRole());
+            ps.setInt(6, entity.getUserId());
+            return ps.executeUpdate() > 0;
         } catch (ClassNotFoundException | SQLException ex) {
             Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, null, ex);
             return false;

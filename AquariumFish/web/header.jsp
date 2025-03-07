@@ -32,14 +32,17 @@
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
+                flex-wrap: wrap; /* Đảm bảo không bị tràn */
             }
+
             .logo {
                 display: flex;
                 align-items: center;
             }
             .logo img {
-                height: 50px;
+                height: 70px;
                 margin-right: 10px;
+                border-radius: 33px;
             }
             .search-bar {
                 flex: 1;
@@ -87,6 +90,21 @@
                 text-decoration: none;
                 font-weight: bold;
             }
+
+            .user-options a {
+                margin: 0;
+                padding: 5px 10px;
+            }
+            .user-options {
+                display: flex;
+                align-items: center;
+                gap: 15px; /* Để các phần tử cách đều */
+            }
+
+            .user-options {
+                white-space: nowrap;
+            }
+
         </style>
 
     </head>
@@ -94,11 +112,15 @@
         <header>
             <div class="top-bar">
                 <div class="logo">
-                    <img src="logo.png" alt="Logo Cá Cảnh">
-                    <h2 style="color: white;">AquaFish</h2>
+                    <img src="img/aquarium_fish_logo.jpg" alt="Logo Cá Cảnh">
+                    <h2 style="color: white;">Aquarium Fish</h2>
                 </div>
                 <div class="search-bar">
-                    <input type="text" placeholder="Tìm kiếm cá cảnh...">
+                    <form action="FishController" method="get">
+                        <input type="hidden" name="action" value="viewProducts">
+                        <input type="text" name="searchTerm" placeholder="Search fish type..." required>
+                    </form>
+
                 </div>
                 <div class="user-options">
                     <%
@@ -108,7 +130,7 @@
                         if (user != null) { // Nếu đã đăng nhập
 %>
 
-                        Xin chào, <a href="infor.jsp?accountUser=<%= user.getAccount()%>" style="color: #333"><%= user.getUserName() %></a>
+                    Xin chào, <a href="infor.jsp?accountUser=<%= user.getAccount()%>" style="color: #333"><%= user.getUserName()%></a>
                     <a href="logout.jsp" style="color: red;">Đăng Xuất</a>
                     <%
                     } else { // Nếu chưa đăng nhập
@@ -126,10 +148,10 @@
             </div>
             <nav class="menu">
                 <a href="mainPage.jsp">Trang chủ</a>
-                <a href="#">Sản phẩm</a>
-                <a href="#">Giảm giá</a>
-                <a href="#">Mẫu hồ cá</a>
-                <a href="#">Kiến thức</a>
+                <a href="product.jsp">Sản phẩm</a>
+                <a href="discount.jsp">Giảm giá</a>
+                <a href="fishTankModel.jsp">Mẫu hồ cá</a>
+                <a href="knowledge.jsp">Kiến thức</a>
                 <a href="#">Giới thiệu</a>
             </nav>
 
