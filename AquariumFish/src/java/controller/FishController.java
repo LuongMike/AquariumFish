@@ -32,6 +32,11 @@ public class FishController extends HttpServlet {
         } else {
             list = fdao.readAll();
         }
+//        if (searchTerm == null) {
+//            searchTerm="";
+//        }
+//        list = fdao.searchByType(searchTerm);
+//        request.setAttribute("searchTerm", searchTerm);
         list.sort(Comparator.comparing(FishDTO::getFishType));
 
         request.setAttribute("fishList", list);
