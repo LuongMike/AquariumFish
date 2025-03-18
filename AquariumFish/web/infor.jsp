@@ -123,7 +123,7 @@
             <% }%>
 
             <a href="updateUser.jsp" class="back-link">Cập Nhật</a>
-            <a href="mainPage.jsp" class="back-link">Quay lại</a>
+            <a href="index.jsp" class="back-link">Quay lại</a>
         </div>
         <jsp:include page="footer.jsp" />
 

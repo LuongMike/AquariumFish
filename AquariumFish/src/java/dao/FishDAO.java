@@ -49,7 +49,7 @@ public class FishDAO implements IDAO<FishDTO, String> {
                 list.add(fish);
             }
         } catch (ClassNotFoundException | SQLException ex) {
-            Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(FishDAO.class.getName()).log(Level.SEVERE, null, ex);
 
         }
         return list;
@@ -98,5 +98,6 @@ public class FishDAO implements IDAO<FishDTO, String> {
         }
         return list;
     }
+
 
 }

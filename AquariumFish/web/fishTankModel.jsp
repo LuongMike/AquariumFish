@@ -159,7 +159,7 @@
         </div>
 
         <div class="back-home">
-            <a href="mainPage.jsp ">Quay lại trang chủ</a>
+            <a href="index.jsp ">Quay lại trang chủ</a>
         </div>
 
         <jsp:include page="footer.jsp" />

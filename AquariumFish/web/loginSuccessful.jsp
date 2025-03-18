@@ -76,7 +76,7 @@
         <div class="container">
             <h2>✅ Xin chào, <%= userAccount %>! Bạn đã đăng nhập thành công.</h2>
             <p>Chào mừng bạn đến với hệ thống. Chúc bạn một ngày tuyệt vời! 🎉</p>
-            <a href="mainPage.jsp" class="btn">🏠 Về Trang Chủ</a>
+            <a href="index.jsp" class="btn">🏠 Về Trang Chủ</a>
         </div>
     </body>
 </html>

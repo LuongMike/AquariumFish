@@ -1,9 +1,11 @@
 package controller;
 
+import com.sun.corba.se.spi.presentation.rmi.StubAdapter;
 import dao.FishDAO;
 import dto.FishDTO;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -11,16 +13,18 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Collections;
-import java.util.Comparator;
 
 @WebServlet(name = "FishController", urlPatterns = {"/FishController"})
 public class FishController extends HttpServlet {
 
     private FishDAO fdao = new FishDAO();
-    private static final String MAIN_PAGE = "mainPage.jsp";
+    final int FISH_PER_PAGE = 10; // Số cá mỗi trang
+    private static final String MAIN_PAGE = "index.jsp";
+    private static final String PRODUCT_PAGE = "product.jsp";
+    private static final String LIST_FISH_PAGE = "listFish.jsp";
 
-    private String processGetFish(HttpServletRequest request, HttpServletResponse response)
+    
+    private String processSeacrhFish(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         String searchTerm = request.getParameter("searchTerm");
@@ -32,16 +36,12 @@ public class FishController extends HttpServlet {
         } else {
             list = fdao.readAll();
         }
-//        if (searchTerm == null) {
-//            searchTerm="";
-//        }
-//        list = fdao.searchByType(searchTerm);
-//        request.setAttribute("searchTerm", searchTerm);
         list.sort(Comparator.comparing(FishDTO::getFishType));
-
-        request.setAttribute("fishList", list);
-        return "product.jsp";
+        request.setAttribute("fish", list);
+        return PRODUCT_PAGE;
     }
+
+  
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -52,55 +52,34 @@ public class FishController extends HttpServlet {
             if (action == null) {
                 url = MAIN_PAGE;
             } else if (action.equals("viewProducts")) {
-                url = processGetFish(request, response);
+                url = processSeacrhFish(request, response);
             }
+            List<FishDTO> fish = fdao.readAll();
+            request.setAttribute("fish", fish);
         } catch (Exception e) {
-            log("Error at MainController: " + e.toString());
+            log("Error at FishController: " + e.toString());
         } finally {
             RequestDispatcher rd = request.getRequestDispatcher(url);
-            if (!url.equals("MainController")) {
+            if (!url.equals("FishController")) {
                 rd.forward(request, response);
             }
         }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
     @Override
     public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
+        return "Fish Controller Servlet";
+    }
 }

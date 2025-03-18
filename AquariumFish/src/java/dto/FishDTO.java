@@ -17,12 +17,12 @@ public class FishDTO {
     private int fishQuantity;
     private String fishDescription;
     private String fishImg;
-    private int categoriesID;
+    private int categoryID;
 
     public FishDTO() {
     }
 
-    public FishDTO(int fishID, String fishType, String fishName, double fishPrice, int fishQuantity, String fishDescription, String fishImg, int categoriesID) {
+    public FishDTO(int fishID, String fishType, String fishName, double fishPrice, int fishQuantity, String fishDescription, String fishImg, int categoryID) {
         this.fishID = fishID;
         this.fishType = fishType;
         this.fishName = fishName;
@@ -30,7 +30,7 @@ public class FishDTO {
         this.fishQuantity = fishQuantity;
         this.fishDescription = fishDescription;
         this.fishImg = fishImg;
-        this.categoriesID = categoriesID;
+        this.categoryID = categoryID;
     }
 
     public int getFishID() {
@@ -89,17 +89,19 @@ public class FishDTO {
         this.fishImg = fishImg;
     }
 
-    public int getCategoriesID() {
-        return categoriesID;
+    public int getCategoryID() {
+        return categoryID;
     }
 
-    public void setCategoriesID(int categoriesID) {
-        this.categoriesID = categoriesID;
+    public void setCategoryID(int categoryID) {
+        this.categoryID = categoryID;
     }
+
+
 
     @Override
     public String toString() {
-        return "FishDTO{" + "fishID=" + fishID + ", fishType=" + fishType + ", fishName=" + fishName + ", fishPrice=" + fishPrice + ", fishQuantity=" + fishQuantity + ", fishDescription=" + fishDescription + ", fishImg=" + fishImg + ", categoriesID=" + categoriesID + '}';
+        return "FishDTO{" + "fishID=" + fishID + ", fishType=" + fishType + ", fishName=" + fishName + ", fishPrice=" + fishPrice + ", fishQuantity=" + fishQuantity + ", fishDescription=" + fishDescription + ", fishImg=" + fishImg + ", categoriesID=" + categoryID + '}';
     }
     
     

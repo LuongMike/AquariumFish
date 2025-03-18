@@ -147,7 +147,7 @@
                 </div>
             </div>
             <nav class="menu">
-                <a href="mainPage.jsp">Trang chủ</a>
+                <a href="index.jsp">Trang chủ</a>
                 <a href="product.jsp">Sản phẩm</a>
                 <a href="discount.jsp">Giảm giá</a>
                 <a href="fishTankModel.jsp">Mẫu hồ cá</a>

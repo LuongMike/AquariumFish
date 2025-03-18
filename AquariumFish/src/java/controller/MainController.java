@@ -21,7 +21,7 @@ public class MainController extends HttpServlet {
 
     private static final String LOGIN_PAGE = "login.jsp";
     private static final String SUCCESS_PAGE = "loginSuccessful.jsp";
-    private static final String MAIN_PAGE = "mainPage.jsp";
+    private static final String MAIN_PAGE = "index.jsp";
 
     private String processLogin(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

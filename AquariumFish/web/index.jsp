@@ -1,13 +1,14 @@
+<%@page import="dto.FishDTO"%>
 <%@page import="dto.DiscountDTO"%>
 <%@page import="java.util.List"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%
     // Lấy danh sách discount từ request
-    List<DiscountDTO> list = (List<DiscountDTO>) request.getAttribute("discount");
+    List<FishDTO> list = (List<FishDTO>) request.getAttribute("fish");
 
     // Nếu danh sách bị null (truy cập trực tiếp JSP), tự động chuyển hướng đến DiscountController
     if (list == null) {
-        response.sendRedirect("DiscountController");
+        response.sendRedirect("FishController");
         return;
     }
 %>
@@ -92,10 +93,7 @@
     <body>
         <jsp:include page="header.jsp" />
         <div class="discount-container">
-            <h1>Danh sách mã giảm giá</h1>
-            <p>Hướng dẫn sử dụng:</p>
-            <p>Sao chép mã Code còn hạn sử dụng và áp dụng vào đơn hàng của bạn.</p>
-            <p>(Lưu ý: Mỗi mã chỉ sử dụng trên 1 đơn hàng!)</p>
+            
             <table class="discount-table">
                 <tr>
                     <th>ID</th>
@@ -105,19 +103,21 @@
                     <th>Ngày bắt đầu</th>
                     <th>Ngày kết thúc</th>
                     <th>Trạng thái</th>
+                    <th>Trạng thái</th>
                 </tr>
                 <%
                     if (!list.isEmpty()) {
-                        for (DiscountDTO d : list) {
+                        for (FishDTO d : list) {
                 %>
                 <tr>
-                    <td><%= d.getDiscoutID()%></td>
-                    <td><%= d.getCode()%></td>
-                    <td><%= d.getDiscount_percentage()%>%</td>
-                    <td><%= d.getDiscount_amount()%> VND</td>
-                    <td><%= d.getStart_date()%></td>
-                    <td><%= d.getEnd_date()%></td>
-                    <td><%= d.getStatus()%></td>
+                    <td><%= d.getFishID()%></td>
+                    <td><%= d.getFishName()%></td>
+                    <td><%= d.getFishType()%>%</td>
+                    <td><%= d.getFishDescription()%> VND</td>
+                    <td><%= d.getFishPrice()%></td>
+                    <td><%= d.getFishQuantity()%></td>
+                    <td><img src="img/<%= d.getFishImg()%>" alt="Fish Image"></td>
+                    <td><%= d.getCategoryID()%></td>
                 </tr>
                 <%
                     }

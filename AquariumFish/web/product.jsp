@@ -80,11 +80,12 @@
 
             <form action="FishController" method="get">
                 <input type="hidden" name="action" value="viewProducts">
-                <input type="text" name="searchTerm" placeholder="Search fish type..." required>
+                <input type="text" name="searchTerm" placeholder="Search by type, name..." value="<%= request.getParameter("searchTerm") != null ? request.getParameter("searchTerm") : ""%>">
+                <input type="submit" value="Search"/>
             </form>
 
             <%
-                List<FishDTO> fishList = (List<FishDTO>) request.getAttribute("fishList");
+                List<FishDTO> fishList = (List<FishDTO>) request.getAttribute("fish");
                 if (fishList != null && !fishList.isEmpty()) {
                     String currentFishType = "";
                     boolean isTableOpen = false; // Biến kiểm tra xem bảng đã mở chưa
@@ -94,44 +95,44 @@
                             // Đóng bảng trước đó nếu có
                             if (isTableOpen) {
             %>
-                            </table>
+        </table>
+        <%
+            }
+            // Cập nhật loại cá mới
+            currentFishType = fish.getFishType();
+            isTableOpen = true;
+        %>
+        <h2><%= currentFishType%></h2>
+        <table>
+            <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Description</th>
+            </tr>
             <%
-                            }
-                            // Cập nhật loại cá mới
-                            currentFishType = fish.getFishType();
-                            isTableOpen = true;
-            %>
-            <h2><%= currentFishType%></h2>
-            <table>
-                <tr>
-                    <th>Image</th>
-                    <th>Name</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
-                    <th>Description</th>
-                </tr>
-            <%
-                        }
-            %>
-                <tr>
-                    <td><img src="img/<%= fish.getFishImg()%>" alt="Image"></td>
-                    <td><%= fish.getFishName()%></td>
-                    <td>$<%= fish.getFishPrice()%></td>
-                    <td><%= fish.getFishQuantity()%></td>
-                    <td><%= fish.getFishDescription()%></td>
-                </tr>
-            <%
-                    }
-                    // Đóng bảng cuối cùng nếu cần
-                    if (isTableOpen) {
-            %>
-            </table>
-            <%
-                    }
-                } else {
-                    out.println("<p>No products found.</p>");
                 }
             %>
-        </div>
-    </body>
+            <tr>
+                <td><img src="img/<%= fish.getFishImg()%>" alt="Image"></td>
+                <td><%= fish.getFishName()%></td>
+                <td>$<%= fish.getFishPrice()%></td>
+                <td><%= fish.getFishQuantity()%></td>
+                <td><%= fish.getFishDescription()%></td>
+            </tr>
+            <%
+                }
+                // Đóng bảng cuối cùng nếu cần
+                if (isTableOpen) {
+            %>
+        </table>
+        <%
+                }
+            } else {
+                out.println("<p>No products found.</p>");
+            }
+        %>
+    </div>
+</body>
 </html>

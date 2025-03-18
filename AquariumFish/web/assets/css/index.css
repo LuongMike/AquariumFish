@@ -1,0 +1,101 @@
+/* Reset some default styles */
+body, h1, h2, h3, p, ul, li, table {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #f4f4f4;
+}
+
+.page-content {
+    width: 80%;
+    margin: auto;
+    padding: 20px;
+}
+
+.catalog-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.search-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.search-container input {
+    width: 300px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.search-container button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.book-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.book-card {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.book-cover img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.book-info {
+    margin-top: 10px;
+}
+
+.book-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.book-price-container {
+    margin-top: 10px;
+    font-size: 16px;
+    color: green;
+}
+
+.in-stock {
+    color: green;
+}
+
+.out-of-stock {
+    color: red;
+}
+
+.view-details-btn {
+    display: block;
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    text-decoration: none;
+    margin-top: 10px;
+    border-radius: 5px;
+}
+
+.view-details-btn:hover {
+    background-color: #0056b3;
+}
