@@ -66,7 +66,6 @@ public class MainController extends HttpServlet {
                 String email = request.getParameter("userEmail");
                 String phone = request.getParameter("userPhone");
                 String address = request.getParameter("userAddress");
-                String role = request.getParameter("userRole");
 
                 // Kiểm tra dữ liệu đầu vào
                 if (!AuthenUtils.isValidUserName(userName)) {
@@ -85,17 +84,13 @@ public class MainController extends HttpServlet {
                     request.setAttribute("errorMessage", "Địa chỉ không hợp lệ!");
                     return url;
                 }
-                if (!AuthenUtils.isValidRole(role)) {
-                    request.setAttribute("errorMessage", "Vai trò không hợp lệ!");
-                    return url;
-                }
+                
 
                 // Nếu hợp lệ, cập nhật thông tin mới
                 user.setUserName(userName);
                 user.setEmail(email);
                 user.setPhone(phone);
                 user.setAddress(address);
-                user.setRole(role);
 
                 boolean updateSuccess = udao.update(user);
 

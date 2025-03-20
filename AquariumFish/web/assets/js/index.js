@@ -1,52 +1,48 @@
-$(document).ready(function() {
-    // Xử lý animation khi trang tải
-    $('.book-card').each(function(index) {
-        $(this).css({
-            'opacity': '0',
-            'transform': 'translateY(20px)'
-        });
-        
-        setTimeout(function() {
-            $(this).animate({
-                'opacity': '1'
-            }, 300);
-            $(this).css('transform', 'translateY(0)');
-        }.bind(this), index * 50);
-    });
-    
-    // Kiểm tra và xử lý khi hình ảnh không tải được
-    $('img').on('error', function() {
-        $(this).attr('src', 'assets/images/no-cover.png');
-    });
-    
-    // Tự động đóng thông báo sau 5 giây
-    setTimeout(function() {
-        $('.message-container').slideUp(300);
-    }, 5000);
-});
+// assets/js/index.js
+document.addEventListener("DOMContentLoaded", function() {
+    // Lấy tất cả các liên kết phân trang
+    const paginationLinks = document.querySelectorAll(".pagination-link");
 
-// Hiển thị loading spinner khi chuyển trang
-function showLoading() {
-    if (!document.getElementById('loading-spinner')) {
-        const spinner = document.createElement('div');
-        spinner.id = 'loading-spinner';
-        spinner.className = 'loading-spinner';
-        spinner.innerHTML = '<div class="spinner"></div>';
-        document.body.appendChild(spinner);
-    }
-    document.getElementById('loading-spinner').style.display = 'flex';
-}
 
-// Thêm sự kiện loading cho các liên kết phân trang
-document.addEventListener('DOMContentLoaded', function() {
-    const paginationLinks = document.querySelectorAll('.pagination-btn');
+
+    // Thêm sự kiện nhấp chuột cho các liên kết phân trang
     paginationLinks.forEach(link => {
-        link.addEventListener('click', showLoading);
+        link.addEventListener("click", function(e) {
+            if (this.classList.contains("disabled")) {
+                e.preventDefault(); // Ngăn chặn nhấp vào trang bị vô hiệu hóa
+            } else {
+                // Thêm hiệu ứng cuộn lên đầu bảng
+                const table = document.querySelector(".discount-table");
+                if (table) {
+                    table.scrollIntoView({ behavior: "smooth" });
+                }
+            }
+        });
+
+        // Thêm hiệu ứng hover
+        link.addEventListener("mouseover", function() {
+            if (!this.classList.contains("disabled") && !this.classList.contains("active")) {
+                this.style.backgroundColor = "#00a2d1";
+            }
+        });
+
+        link.addEventListener("mouseout", function() {
+            if (!this.classList.contains("disabled") && !this.classList.contains("active")) {
+                this.style.backgroundColor = "#00b7eb";
+            }
+        });
     });
-    
-    // Thêm sự kiện loading cho form tìm kiếm
-    const searchForm = document.querySelector('.search-container form');
-    if (searchForm) {
-        searchForm.addEventListener('submit', showLoading);
-    }
+
+    // Gọi hàm làm nổi bật khi tải trang
+    highlightCurrentPage();
+
+    // Cập nhật trang hiện tại khi nhấp (nếu cần thêm logic phía client)
+    paginationLinks.forEach(link => {
+        link.addEventListener("click", function(e) {
+            if (!this.classList.contains("disabled")) {
+                document.querySelectorAll(".pagination-link").forEach(l => l.classList.remove("active"));
+                this.classList.add("active");
+            }
+        });
+    });
 });

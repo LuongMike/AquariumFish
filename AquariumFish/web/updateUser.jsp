@@ -149,10 +149,8 @@
                 <input type="text" name="userAddress" value="<%= user.getAddress()%>" required/>
 
                 <label>Role</label>
-                <select name="userRole" required>
-                    <option value="admin" <%= user.getRole().equals("admin") ? "selected" : ""%>>Admin</option>
-                    <option value="customer" <%= user.getRole().equals("customer") ? "selected" : ""%>>Customer</option>
-                </select>
+                <input type="text" name="userRole" value="<%= user.getRole()%>" readonly/>
+
 
                 <button type="submit">Update</button>
             </form>
