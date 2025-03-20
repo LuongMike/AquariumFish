@@ -136,9 +136,6 @@
                 <label>Account:</label>
                 <input type="text" name="userAccount" value="<%= user.getAccount()%>" readonly/>
 
-                <label>Password</label>
-                <input type="text" name="userPassword" value="<%= user.getPassword()%>" readonly/>
-
                 <label>Email:</label>
                 <input type="email" name="userEmail" value="<%= user.getEmail()%>" required/>
 

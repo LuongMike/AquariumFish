@@ -1,3 +1,4 @@
+<%@page import="utils.AuthenUtils"%>
 <%@page import="java.util.List, dto.FishDTO"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
@@ -12,7 +13,13 @@
 
         <div class="container">
             <h1>Product List</h1>
+            <% if (request.getAttribute("message") != null) {%>
+            <p class="error"><%= request.getAttribute("message")%></p>
+            <% }%>
+            <%if (AuthenUtils.isAdmin(session)) {
+            %>
             <a href="add.jsp" class="add-button">Add Product</a> <!-- Nút thêm mới -->
+            <%}%>
             <form action="FishController" method="get">
                 <input type="hidden" name="action" value="viewProducts">
                 <input type="text" name="searchTerm" placeholder="Search by type, name..." value="<%= request.getParameter("searchTerm") != null ? request.getParameter("searchTerm") : ""%>">
@@ -55,7 +62,10 @@
                 <th>Price</th>
                 <th>Quantity</th>
                 <th>Description</th>
+                    <%if (AuthenUtils.isAdmin(session)) {
+                    %>
                 <th>action</th>
+                    <%}%>
             </tr>
             <%
                 }
@@ -66,11 +76,14 @@
                 <td>$<%= String.format("%,.2f", fish.getFishPrice())%></td>
                 <td><%= fish.getFishQuantity()%></td>
                 <td><%= fish.getFishDescription()%></td>
+                <%if (AuthenUtils.isAdmin(session)) {
+                %>
                 <td><a href="FishController?action=delete&id=<%=fish.getFishID()%>">
                         <img src="img/delete-icon.png" style="height: 25px"/>
                     </a>|<a href="FishController?action=edit&id=<%=fish.getFishID()%>">
                         <img src="img/edit.png" style="height: 25px"/>
                     </a></td>
+                    <%}%>
             </tr>
             <%
                 }

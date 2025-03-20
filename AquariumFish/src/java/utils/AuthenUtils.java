@@ -8,6 +8,7 @@ package utils;
 import dao.UserDAO;
 import dto.UserDTO;
 import java.util.regex.Pattern;
+import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -18,7 +19,10 @@ public class AuthenUtils {
     private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@(.+)$";
     private static final String PHONE_REGEX = "^[0-9]{10,11}$";
     private static final String NAME_REGEX = "^[A-Za-zÀ-Ỹà-ỹ\\s]{3,50}$"; // Chỉ chấp nhận chữ cái, từ 3-50 ký tự
+    public static final String Admin_ROLE = "admin";
+    public static final String Customer_ROLE = "customer";
 
+    
     public static UserDTO getUser(String account) {
         UserDAO udao = new UserDAO();
         return udao.readbyAccount(account);
@@ -27,6 +31,18 @@ public class AuthenUtils {
     public static boolean isValidLogin(String account, String password) {
         UserDTO user = getUser(account);
         return user != null && user.getPassword().equals(password);
+    }
+
+    public static boolean isLoggedIn(HttpSession session) {
+        return session.getAttribute("user") != null;
+    }
+
+    public static boolean isAdmin(HttpSession session) {
+        if (!isLoggedIn(session)) {
+            return false;
+        }
+        UserDTO user = (UserDTO) session.getAttribute("user");
+        return user.getRole().equals(Admin_ROLE);
     }
 
     //validate User Update

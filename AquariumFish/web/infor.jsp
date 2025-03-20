@@ -112,7 +112,6 @@
                 <tr><th>User ID</th><td><%= user.getUserId()%></td></tr>
                 <tr><th>User Name</th><td><%= user.getUserName()%></td></tr>
                 <tr><th>Account</th><td><%= user.getAccount()%></td></tr>
-                <tr><th>Password</th><td><%= user.getPassword()%></td></tr>
                 <tr><th>Email</th><td><%= user.getEmail()%></td></tr>
                 <tr><th>Phone</th><td><%= user.getPhone()%></td></tr>
                 <tr><th>Address</th><td><%= user.getAddress()%></td></tr>

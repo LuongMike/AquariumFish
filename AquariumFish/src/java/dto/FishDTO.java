@@ -18,6 +18,7 @@ public class FishDTO {
     private String fishDescription;
     private String fishImg;
     private int categoryID;
+    private String categoryName;
 
     public FishDTO() {
     }
@@ -32,6 +33,27 @@ public class FishDTO {
         this.fishImg = fishImg;
         this.categoryID = categoryID;
     }
+
+    public FishDTO(int fishID, String fishType, String fishName, double fishPrice, int fishQuantity, String fishDescription, String fishImg, int categoryID, String categoryName) {
+        this.fishID = fishID;
+        this.fishType = fishType;
+        this.fishName = fishName;
+        this.fishPrice = fishPrice;
+        this.fishQuantity = fishQuantity;
+        this.fishDescription = fishDescription;
+        this.fishImg = fishImg;
+        this.categoryID = categoryID;
+        this.categoryName = categoryName;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
+   
 
     public int getFishID() {
         return fishID;

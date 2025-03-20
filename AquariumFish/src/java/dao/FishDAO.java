@@ -46,13 +46,43 @@ public class FishDAO implements IDAO<FishDTO, String> {
     }
 
     @Override
+//    public List<FishDTO> readAll() {
+//        List<FishDTO> list = new ArrayList<>();
+//        String sql = "SELECT * FROM tblFish WHERE fishQuantity > 0";
+//        try {
+//            Connection conn = DButils.getConnection();
+//            PreparedStatement ps = conn.prepareStatement(sql);
+//            ResultSet rs = ps.executeQuery();
+//            while (rs.next()) {
+//                FishDTO fish = new FishDTO(
+//                        rs.getInt("fishID"),
+//                        rs.getString("fishType"),
+//                        rs.getString("fishName"),
+//                        rs.getDouble("fishPrice"),
+//                        rs.getInt("fishQuantity"),
+//                        rs.getString("fishDescription"),
+//                        rs.getString("fishImg"),
+//                        rs.getInt("categoryID")
+//                );
+//                list.add(fish);
+//            }
+//        } catch (ClassNotFoundException | SQLException ex) {
+//            Logger.getLogger(FishDAO.class.getName()).log(Level.SEVERE, null, ex);
+//
+//        }
+//        return list;
+//    }
     public List<FishDTO> readAll() {
         List<FishDTO> list = new ArrayList<>();
-        String sql = "SELECT * FROM tblFish WHERE fishQuantity > 0";
+        String sql = "SELECT f.fishID, f.fishType, f.fishName, f.fishPrice, f.fishQuantity, f.fishDescription, f.fishImg, f.categoryID, c.categoryName " +
+                     "FROM tblFish f JOIN tblCategory c ON f.categoryID = c.categoryID WHERE f.fishQuantity > 0";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
         try {
-            Connection conn = DButils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
+            conn = DButils.getConnection();
+            ps = conn.prepareStatement(sql);
+            rs = ps.executeQuery();
             while (rs.next()) {
                 FishDTO fish = new FishDTO(
                         rs.getInt("fishID"),
@@ -62,13 +92,21 @@ public class FishDAO implements IDAO<FishDTO, String> {
                         rs.getInt("fishQuantity"),
                         rs.getString("fishDescription"),
                         rs.getString("fishImg"),
-                        rs.getInt("categoryID")
+                        rs.getInt("categoryID"),
+                        rs.getString("categoryName")
                 );
                 list.add(fish);
             }
         } catch (ClassNotFoundException | SQLException ex) {
-            Logger.getLogger(FishDAO.class.getName()).log(Level.SEVERE, null, ex);
-
+            Logger.getLogger(FishDAO.class.getName()).log(Level.SEVERE, "Error at readAll: " + ex.getMessage(), ex);
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (ps != null) ps.close();
+                if (conn != null) conn.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(FishDAO.class.getName()).log(Level.SEVERE, "Error closing resources in readAll: " + ex.getMessage(), ex);
+            }
         }
         return list;
     }
@@ -176,6 +214,36 @@ public class FishDAO implements IDAO<FishDTO, String> {
             System.out.println(e.toString());
         }
         return null;
+    }
+    
+    public List<FishDTO> getFishByCategory(int categoryID) {
+        List<FishDTO> fishList = new ArrayList<>();
+        String sql = "SELECT f.fishID, f.fishType, f.fishName, f.fishPrice, f.fishQuantity, f.fishDescription, f.fishImg, f.categoryID, c.categoryName " +
+                    "FROM tblFish f JOIN tblCategory c ON f.categoryID = c.categoryID WHERE f.categoryID = ?";
+
+        try {
+            Connection conn = DButils.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, categoryID);
+                        ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                FishDTO fish = new FishDTO(
+                        rs.getInt("fishID"),
+                        rs.getString("fishType"),
+                        rs.getString("fishName"),
+                        rs.getDouble("fishPrice"),
+                        rs.getInt("fishQuantity"),
+                        rs.getString("fishDescription"),
+                        rs.getString("fishImg"),
+                        rs.getInt("categoryID"),
+                        rs.getString("categoryName")
+                );
+                fishList.add(fish);
+            }
+        } catch (Exception e) {
+            System.out.println(e.toString());
+        }
+        return fishList;
     }
 
 }
