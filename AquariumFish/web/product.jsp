@@ -62,6 +62,7 @@
                 <th>Price</th>
                 <th>Quantity</th>
                 <th>Description</th>
+                <th>Xem Chi Tiết</th>
                     <%if (AuthenUtils.isAdmin(session)) {
                     %>
                 <th>action</th>
@@ -71,11 +72,12 @@
                 }
             %>
             <tr>
-                <td><img src="img/<%= fish.getFishImg()%>" alt="Image"></td>
+                <td><img src="<%= fish.getFishImg()%>" alt="Image"></td>
                 <td><%= fish.getFishName()%></td>
                 <td>$<%= String.format("%,.2f", fish.getFishPrice())%></td>
                 <td><%= fish.getFishQuantity()%></td>
                 <td><%= fish.getFishDescription()%></td>
+                <td><a href="FishController?action=details&id=<%= fish.getFishID() %>">Xem Chi Tiết</a></td>
                 <%if (AuthenUtils.isAdmin(session)) {
                 %>
                 <td><a href="FishController?action=delete&id=<%=fish.getFishID()%>">

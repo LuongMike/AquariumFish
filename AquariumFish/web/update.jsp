@@ -1,67 +1,109 @@
 <%@page import="dto.FishDTO"%>
+<%@page import="dto.CategoryDTO"%>
+<%@page import="java.util.List"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Update Product</title>
-        <link rel="stylesheet" href="assets/css/update.css"/>
+        <title>Cập Nhật Cá</title>
+        <link rel="stylesheet" href="assets/css/update.css">
     </head>
     <body>
         <jsp:include page="header.jsp" />
-
         <div class="container">
-            <h1>Update Product</h1>
-            <%
-                String message = (String) request.getAttribute("message");
-                if (message != null) {
-            %>
-            <p style="color: <%= message.contains("success") ? "green" : "red" %>;"><%= message %></p>
-            <%
-                }
+            <h1>Cập Nhật Cá</h1>
+            <% String message = (String) request.getAttribute("message"); %>
+            <% if (message != null) { %>
+                <p class="message <%= message.contains("successfully") ? "success" : "error" %>"><%= message %></p>
+            <% } %>
+            <% 
                 FishDTO fish = (FishDTO) request.getAttribute("fish");
                 if (fish != null) {
             %>
-            <form action="FishController" method="post">
+            <form action="FishController" method="post" class="fish-form">
                 <input type="hidden" name="action" value="update">
                 <input type="hidden" name="fishId" value="<%= fish.getFishID() %>">
 
-                <label for="fishType">Fish Type:</label><br>
-                <input type="text" name="fishType" value="<%= fish.getFishType() != null ? fish.getFishType() : "" %>" required>
-                <span style="color: red;"><%= request.getAttribute("fishType_error") != null ? request.getAttribute("fishType_error") : "" %></span><br><br>
+                <div class="form-group">
+                    <label for="fishType">Loại cá:</label>
+                    <input type="text" id="fishType" name="fishType" value="<%= fish.getFishType() != null ? fish.getFishType() : "" %>">
+                    <% if (request.getAttribute("fishType_error") != null) { %>
+                        <span class="error"><%= request.getAttribute("fishType_error") %></span>
+                    <% } %>
+                </div>
 
-                <label for="fishName">Fish Name:</label><br>
-                <input type="text" name="fishName" value="<%= fish.getFishName() != null ? fish.getFishName() : "" %>" required>
-                <span style="color: red;"><%= request.getAttribute("fishName_error") != null ? request.getAttribute("fishName_error") : "" %></span><br><br>
+                <div class="form-group">
+                    <label for="fishName">Tên cá:</label>
+                    <input type="text" id="fishName" name="fishName" value="<%= fish.getFishName() != null ? fish.getFishName() : "" %>">
+                    <% if (request.getAttribute("fishName_error") != null) { %>
+                        <span class="error"><%= request.getAttribute("fishName_error") %></span>
+                    <% } %>
+                </div>
 
-                <label for="fishPrice">Price ($):</label><br>
-                <input type="number" step="0.01" name="fishPrice" value="<%= fish.getFishPrice() %>" required>
-                <span style="color: red;"><%= request.getAttribute("fishPrice_error") != null ? request.getAttribute("fishPrice_error") : "" %></span><br><br>
+                <div class="form-group">
+                    <label for="fishPrice">Giá:</label>
+                    <input type="number" id="fishPrice" name="fishPrice" step="0.01" value="<%= fish.getFishPrice() %>">
+                    <% if (request.getAttribute("fishPrice_error") != null) { %>
+                        <span class="error"><%= request.getAttribute("fishPrice_error") %></span>
+                    <% } %>
+                </div>
 
-                <label for="fishQuantity">Quantity:</label><br>
-                <input type="number" name="fishQuantity" value="<%= fish.getFishQuantity() %>" required>
-                <span style="color: red;"><%= request.getAttribute("fishQuantity_error") != null ? request.getAttribute("fishQuantity_error") : "" %></span><br><br>
+                <div class="form-group">
+                    <label for="fishQuantity">Số lượng:</label>
+                    <input type="number" id="fishQuantity" name="fishQuantity" value="<%= fish.getFishQuantity() %>">
+                    <% if (request.getAttribute("fishQuantity_error") != null) { %>
+                        <span class="error"><%= request.getAttribute("fishQuantity_error") %></span>
+                    <% } %>
+                </div>
 
-                <label for="fishDescription">Description:</label><br>
-                <textarea name="fishDescription" required><%= fish.getFishDescription() != null ? fish.getFishDescription() : "" %></textarea>
-                <span style="color: red;"><%= request.getAttribute("fishDescription_error") != null ? request.getAttribute("fishDescription_error") : "" %></span><br><br>
+                <div class="form-group">
+                    <label for="fishDescription">Mô tả:</label>
+                    <textarea id="fishDescription" name="fishDescription"><%= fish.getFishDescription() != null ? fish.getFishDescription() : "" %></textarea>
+                    <% if (request.getAttribute("fishDescription_error") != null) { %>
+                        <span class="error"><%= request.getAttribute("fishDescription_error") %></span>
+                    <% } %>
+                </div>
 
-                <label for="fishImg">Image URL:</label><br>
-                <input type="text" name="fishImg" value="<%= fish.getFishImg() != null ? fish.getFishImg() : "" %>" required><br><br>
+                <div class="form-group">
+                    <label for="categoryID">Danh mục:</label>
+                    <select id="categoryID" name="categoryID">
+                        <option value="">Chọn danh mục</option>
+                        <option value="1" <%= fish.getCategoryID() == 1 ? "selected" : "" %>>Danh mục 1</option>
+                        <option value="2" <%= fish.getCategoryID() == 2 ? "selected" : "" %>>Danh mục 2</option>
+                    </select>
+                    <% if (request.getAttribute("categoryID_error") != null) { %>
+                        <span class="error"><%= request.getAttribute("categoryID_error") %></span>
+                    <% } %>
+                </div>
 
-                <label for="categoryID">Category ID:</label><br>
-                <input type="number" name="categoryID" value="<%= fish.getCategoryID() %>" required><br><br>
+                <div class="form-group">
+                    <label for="imageUpload">Hình ảnh:</label>
+                    <input type="file" id="imageUpload" name="imageUpload" accept="image/*">
+                    <input type="hidden" id="txtImage" name="txtImage" value="<%= fish.getFishImg() != null ? fish.getFishImg() : "" %>">
+                    <span id="fileInfo">Chưa chọn file</span>
+                    <div id="progressContainer" style="display: none;">
+                        <div id="progressBar"></div>
+                    </div>
+                    <div id="imagePreview">
+                        <% if (fish.getFishImg() != null && !fish.getFishImg().isEmpty()) { %>
+                            <img src="<%= fish.getFishImg() %>" alt="Hình ảnh hiện tại">
+                        <% } %>
+                    </div>
+                </div>
 
-                <input type="submit" value="Update Product">
+                <div class="form-group">
+                    <button type="submit">Cập Nhật</button>
+                    <button type="button" id="resetBtn">Reset Ảnh</button>
+                </div>
             </form>
-            <%
-                } 
-            %>
-            <br>
-            <a href="product.jsp" class="back-link">Back to Product List</a>
+            <% } else { %>
+            <p class="no-data">Không tìm thấy cá để cập nhật.</p>
+            <% } %>
+            <a href="index.jsp" class="back-link">Quay lại</a>
         </div>
-
         <jsp:include page="footer.jsp" />
-        <script src="assets/js/index.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="assets/js/imageConverter.js"></script>
     </body>
 </html>

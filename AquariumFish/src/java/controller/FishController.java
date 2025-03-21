@@ -165,7 +165,7 @@ public class FishController extends HttpServlet {
     private String processDeleteFish(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String url = "product.jsp";
-        if (!AuthenUtils.isAdmin(request.getSession())) {
+        if (AuthenUtils.isAdmin(request.getSession())) {
             url = "product.jsp";
             String id = request.getParameter("id");
             fdao.updateQuantityToZero(id);
@@ -177,85 +177,144 @@ public class FishController extends HttpServlet {
 
     private String processEditFish(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String url = MAIN_PAGE;
-        if (!AuthenUtils.isAdmin(request.getSession())) {
-            url = "update.jsp";
+        String url = "update.jsp";
+        if (AuthenUtils.isAdmin(request.getSession())) { // Sửa điều kiện cho phù hợp với processUpdateFish
             String id = request.getParameter("id");
-            FishDTO fish = fdao.readbyID(id);
-            request.setAttribute("fish", fish);
+            try {
+                FishDTO fish = fdao.readbyID(id); // Đảm bảo id là chuỗi số hợp lệ
+                if (fish != null) {
+                    request.setAttribute("fish", fish);
+                } else {
+                    request.setAttribute("message", "Không tìm thấy cá với ID: " + id);
+                }
+            } catch (Exception e) {
+                request.setAttribute("message", "Lỗi khi lấy dữ liệu cá: " + e.getMessage());
+                log("Error at processEditFish: " + e.toString());
+            }
         } else {
             response.getWriter().print("<h1>303 Error, ... </h1>");
         }
-
         return url;
     }
 
     private String processUpdateFish(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String url = "update.jsp"; // Giữ lại trên trang update.jsp nếu có lỗi
+        String url = "update.jsp";
 
-        if (!AuthenUtils.isAdmin(request.getSession())) {
-
+        if (AuthenUtils.isAdmin(request.getSession())) {
             try {
+                // Lấy dữ liệu từ form của update.jsp
                 String fishId = request.getParameter("fishId");
                 String fishType = request.getParameter("fishType");
                 String fishName = request.getParameter("fishName");
-                double fishPrice = Double.parseDouble(request.getParameter("fishPrice"));
-                int fishQuantity = Integer.parseInt(request.getParameter("fishQuantity"));
+                String fishPriceStr = request.getParameter("fishPrice");
+                String fishQuantityStr = request.getParameter("fishQuantity");
                 String fishDescription = request.getParameter("fishDescription");
-                String fishImg = request.getParameter("fishImg");
-                int categoryID = Integer.parseInt(request.getParameter("categoryID"));
+                String base64Image = request.getParameter("txtImage");
+                String categoryIDStr = request.getParameter("categoryID");
 
-                // Khởi tạo các thông báo lỗi
+                // Kiểm tra fishId hợp lệ trước khi xử lý
+                int fishIdInt;
+                try {
+                    fishIdInt = Integer.parseInt(fishId);
+                } catch (NumberFormatException e) {
+                    request.setAttribute("message", "ID cá không hợp lệ: " + fishId);
+                    return url;
+                }
+
+                // Chuyển đổi dữ liệu
+                double fishPrice = (fishPriceStr != null && !fishPriceStr.isEmpty()) ? Double.parseDouble(fishPriceStr) : -1;
+                int fishQuantity = (fishQuantityStr != null && !fishQuantityStr.isEmpty()) ? Integer.parseInt(fishQuantityStr) : -1;
+                int categoryID = (categoryIDStr != null && !categoryIDStr.isEmpty()) ? Integer.parseInt(categoryIDStr) : -1;
+
+                // Giữ ảnh cũ nếu không có ảnh mới
+                FishDTO existingFish = fdao.readbyID(fishId);
+                if (existingFish == null) {
+                    request.setAttribute("message", "Không tìm thấy cá với ID: " + fishId);
+                    return url;
+                }
+                String fishImg = (base64Image != null && !base64Image.trim().isEmpty()) ? base64Image : existingFish.getFishImg();
+
+                // Kiểm tra lỗi đầu vào
                 boolean checkError = false;
                 if (fishType == null || fishType.trim().isEmpty()) {
-                    request.setAttribute("fishType_error", "Fish Type cannot be empty.");
-                    fishType = ""; // Gán giá trị rỗng để giữ form
+                    request.setAttribute("fishType_error", "Loại cá không được để trống.");
+                    fishType = "";
                     checkError = true;
                 }
                 if (fishName == null || fishName.trim().isEmpty()) {
-                    request.setAttribute("fishName_error", "Fish Name cannot be empty.");
-                    fishName = ""; // Gán giá trị rỗng
+                    request.setAttribute("fishName_error", "Tên cá không được để trống.");
+                    fishName = "";
                     checkError = true;
                 }
                 if (fishPrice <= 0) {
-                    request.setAttribute("fishPrice_error", "Fish Price must be greater than 0.");
+                    request.setAttribute("fishPrice_error", "Giá phải lớn hơn 0.");
                     checkError = true;
                 }
-                if (fishQuantity <= 0) {
-                    request.setAttribute("fishQuantity_error", "Fish Quantity must be greater than 0.");
+                if (fishQuantity < 0) {
+                    request.setAttribute("fishQuantity_error", "Số lượng phải lớn hơn hoặc bằng 0.");
                     checkError = true;
                 }
                 if (fishDescription == null || fishDescription.trim().isEmpty()) {
-                    request.setAttribute("fishDescription_error", "Fish Description cannot be empty.");
-                    fishDescription = ""; // Sửa lỗi gán fishName thành fishDescription
+                    request.setAttribute("fishDescription_error", "Mô tả không được để trống.");
+                    fishDescription = "";
+                    checkError = true;
+                }
+                if (categoryID != 1 && categoryID != 2) {
+                    request.setAttribute("categoryID_error", "Vui lòng chọn danh mục 1 hoặc 2.");
                     checkError = true;
                 }
 
+                // Tạo FishDTO với dữ liệu đã lấy
                 FishDTO fish = new FishDTO(
-                        Integer.parseInt(fishId), fishType, fishName, fishPrice, fishQuantity,
-                        fishDescription, fishImg, categoryID // categoryName có thể null nếu không lấy từ DB
+                        fishIdInt,
+                        fishType,
+                        fishName,
+                        fishPrice,
+                        fishQuantity,
+                        fishDescription,
+                        fishImg,
+                        categoryID
                 );
 
+                // Nếu không có lỗi, cập nhật vào database
                 if (!checkError) {
-                    boolean result = fdao.update(fish); // Gọi phương thức updateFish
+                    boolean result = fdao.update(fish);
                     if (result) {
-                        url = "update.jsp";
-                        request.setAttribute("message", "Product updated successfully!");
+                        url = MAIN_PAGE;
+                        request.setAttribute("message", "Cập nhật cá thành công!");
                     } else {
-                        request.setAttribute("message", "Failed to update product!");
-                        request.setAttribute("fish", fish); // Giữ dữ liệu để hiển thị lại
+                        request.setAttribute("message", "Cập nhật cá thất bại!");
+                        request.setAttribute("fish", fish);
                     }
                 } else {
-                    request.setAttribute("fish", fish); // Giữ dữ liệu để hiển thị lại form
+                    request.setAttribute("fish", fish);
                 }
 
             } catch (NumberFormatException e) {
-                request.setAttribute("message", "Invalid numeric input: " + e.getMessage());
+                request.setAttribute("message", "Dữ liệu số không hợp lệ: " + e.getMessage());
                 log("Error at processUpdateFish - NumberFormatException: " + e.toString());
+                String fishId = request.getParameter("fishId");
+                try {
+                    FishDTO fish = fdao.readbyID(fishId);
+                    if (fish != null) {
+                        request.setAttribute("fish", fish);
+                    }
+                } catch (Exception ex) {
+                    log("Error retrieving fish after NumberFormatException: " + ex.toString());
+                }
             } catch (Exception e) {
-                request.setAttribute("message", "An error occurred: " + e.getMessage());
+                request.setAttribute("message", "Đã xảy ra lỗi: " + e.getMessage());
                 log("Error at processUpdateFish: " + e.toString());
+                String fishId = request.getParameter("fishId");
+                try {
+                    FishDTO fish = fdao.readbyID(fishId);
+                    if (fish != null) {
+                        request.setAttribute("fish", fish);
+                    }
+                } catch (Exception ex) {
+                    log("Error retrieving fish after Exception: " + ex.toString());
+                }
             }
         } else {
             response.getWriter().print("<h1>303 Error, ... </h1>");
@@ -265,72 +324,80 @@ public class FishController extends HttpServlet {
 
     private String processAddFish(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String url = "add.jsp"; // Luôn giữ trên add.jsp
-        if (!AuthenUtils.isAdmin(request.getSession())) {
+        String url = "add.jsp";
 
+        if (AuthenUtils.isAdmin(request.getSession())) {
             try {
                 String fishType = request.getParameter("fishType");
                 String fishName = request.getParameter("fishName");
-                double fishPrice = Double.parseDouble(request.getParameter("fishPrice"));
-                int fishQuantity = Integer.parseInt(request.getParameter("fishQuantity"));
+                String fishPriceStr = request.getParameter("fishPrice");
+                String fishQuantityStr = request.getParameter("fishQuantity");
                 String fishDescription = request.getParameter("fishDescription");
-                String fishImg = request.getParameter("fishImg");
-                int categoryID = Integer.parseInt(request.getParameter("categoryID"));
+                String base64Image = request.getParameter("txtImage"); // Base64 từ add.jsp
+                String categoryIDStr = request.getParameter("categoryID");
 
-                // Khởi tạo các thông báo lỗi
+                // Kiểm tra và chuyển đổi dữ liệu
+                double fishPrice = (fishPriceStr != null && !fishPriceStr.isEmpty()) ? Double.parseDouble(fishPriceStr) : -1;
+                int fishQuantity = (fishQuantityStr != null && !fishQuantityStr.isEmpty()) ? Integer.parseInt(fishQuantityStr) : -1;
+                int categoryID = (categoryIDStr != null && !categoryIDStr.isEmpty()) ? Integer.parseInt(categoryIDStr) : -1;
+
+                // Kiểm tra lỗi
                 boolean checkError = false;
                 if (fishType == null || fishType.trim().isEmpty()) {
-                    request.setAttribute("fishType_error", "Fish Type cannot be empty.");
+                    request.setAttribute("fishType_error", "Loại cá không được để trống.");
                     checkError = true;
                 }
                 if (fishName == null || fishName.trim().isEmpty()) {
-                    request.setAttribute("fishName_error", "Fish Name cannot be empty.");
+                    request.setAttribute("fishName_error", "Tên cá không được để trống.");
                     checkError = true;
                 }
                 if (fishPrice <= 0) {
-                    request.setAttribute("fishPrice_error", "Fish Price must be greater than 0.");
+                    request.setAttribute("fishPrice_error", "Giá phải lớn hơn 0.");
                     checkError = true;
                 }
                 if (fishQuantity <= 0) {
-                    request.setAttribute("fishQuantity_error", "Fish Quantity must be greater than 0.");
+                    request.setAttribute("fishQuantity_error", "Số lượng phải lớn hơn 0.");
                     checkError = true;
                 }
                 if (fishDescription == null || fishDescription.trim().isEmpty()) {
-                    request.setAttribute("fishDescription_error", "Fish Description cannot be empty.");
+                    request.setAttribute("fishDescription_error", "Mô tả không được để trống.");
+                    checkError = true;
+                }
+                if (categoryID != 1 && categoryID != 2) {
+                    request.setAttribute("categoryID_error", "Vui lòng chọn danh mục 1 hoặc 2.");
                     checkError = true;
                 }
 
+                // Nếu không có lỗi, tạo FishDTO và thêm vào database
                 if (!checkError) {
-                    FishDTO fish = new FishDTO(0, fishType, fishName, fishPrice, fishQuantity, fishDescription, fishImg, categoryID);
-                    boolean result = fdao.create(fish); // Gọi phương thức tạo mới
+                    FishDTO fish = new FishDTO(0, fishType, fishName, fishPrice, fishQuantity, fishDescription, base64Image, categoryID);
+                    boolean result = fdao.create(fish);
                     if (result) {
-                        request.setAttribute("message", "Product added successfully!");
-                        // Không cần gán lại fish vì đây là thêm mới, form sẽ được reset
-                        request.setAttribute("fishType", ""); // Reset form
-                        request.setAttribute("fishName", "");
-                        request.setAttribute("fishPrice", "");
-                        request.setAttribute("fishQuantity", "");
-                        request.setAttribute("fishDescription", "");
-                        request.setAttribute("fishImg", "");
-                        request.setAttribute("categoryID", "");
+                        url = MAIN_PAGE;
+                        request.setAttribute("message", "Thêm cá thành công!");
                     } else {
-                        request.setAttribute("message", "Failed to add product!");
+                        request.setAttribute("message", "Thêm cá thất bại!");
                     }
                 } else {
-                    // Giữ dữ liệu đã nhập để hiển thị lại
+                    // Giữ lại dữ liệu khi có lỗi
                     request.setAttribute("fishType", fishType);
                     request.setAttribute("fishName", fishName);
-                    request.setAttribute("fishPrice", String.valueOf(fishPrice));
-                    request.setAttribute("fishQuantity", String.valueOf(fishQuantity));
+                    request.setAttribute("fishPrice", fishPriceStr);
+                    request.setAttribute("fishQuantity", fishQuantityStr);
                     request.setAttribute("fishDescription", fishDescription);
-                    request.setAttribute("fishImg", fishImg);
-                    request.setAttribute("categoryID", String.valueOf(categoryID));
+                    request.setAttribute("fishImg", base64Image);
+                    request.setAttribute("categoryID", categoryIDStr);
                 }
+
+                // Gửi lại danh sách danh mục (nếu cần thiết cho các trang khác)
+                List<CategoryDTO> categories = cdao.readAll();
+                request.setAttribute("categories", categories);
+
             } catch (NumberFormatException e) {
-                request.setAttribute("message", "Invalid numeric input: " + e.getMessage());
+                request.setAttribute("message", "Dữ liệu số không hợp lệ: " + e.getMessage());
                 log("Error at processAddFish - NumberFormatException: " + e.toString());
             } catch (Exception e) {
-                request.setAttribute("message", "An error occurred: " + e.getMessage());
+                request.setAttribute("message", "Đã xảy ra lỗi: " + e.getMessage());
                 log("Error at processAddFish: " + e.toString());
             }
         } else {
@@ -358,6 +425,24 @@ public class FishController extends HttpServlet {
         return url;
     }
 
+    private String processDetailsFish(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String url = "details.jsp";
+        String id = request.getParameter("id");
+        try {
+            FishDTO fish = fdao.readbyID(id);
+            if (fish != null) {
+                request.setAttribute("fish", fish);
+            } else {
+                request.setAttribute("message", "Không tìm thấy cá với ID: " + id);
+            }
+        } catch (Exception e) {
+            request.setAttribute("message", "Lỗi khi lấy thông tin cá: " + e.getMessage());
+            log("Error at processDetailsFish: " + e.toString());
+        }
+        return url;
+    }
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
@@ -379,6 +464,8 @@ public class FishController extends HttpServlet {
                 url = processUpdateFish(request, response);
             } else if (action.equals("add")) {
                 url = processAddFish(request, response);
+            } else if (action.equals("details")) {
+                url = processDetailsFish(request, response);
             }
         } catch (Exception e) {
             log("Error at FishController: " + e.toString());

@@ -93,6 +93,7 @@
                                 <th>Giá</th>
                                 <th>Số lượng</th>
                                 <th>Hình ảnh</th>
+                                <th>Xem Chi Tiết</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -108,7 +109,8 @@
                                 <td><%= d.getFishDescription()%></td>
                                 <td><%= String.format("%,.0f", d.getFishPrice())%> VND</td>
                                 <td><%= d.getFishQuantity()%></td>
-                                <td><img src="img/<%= d.getFishImg()%>" alt="Fish Image" class="table-image"></td>
+                                <td><img src="<%= d.getFishImg()%>" alt="Fish Image" class="table-image"></td>
+                                <td><a href="FishController?action=details&id=<%= d.getFishID() %>">Xem Chi Tiết</a></td>
                             </tr>
                             <%
                                 }
