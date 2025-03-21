@@ -102,6 +102,9 @@
                 <%= loginError%>
             </div>
             <% }%>
+            <div class="register-link">
+                <p>If you don't have an account, <a href="register.jsp">register here!</a></p>
+            </div>
 
         </div>
         <%@include file="footer.jsp"%>

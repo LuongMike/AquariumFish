@@ -237,4 +237,39 @@ public class UserDAO implements IDAO<UserDTO, String> {
         }
         return false;
     }
+    
+    public boolean registerUser(String userName, String account, String password, String email, String phone, String address) {
+        String sql = "INSERT INTO tblUser (userName, account, password, email, phone, address, role) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, 'customer')";
+        try (Connection conn = DButils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, userName);
+            ps.setString(2, account);
+            ps.setString(3, password);
+            ps.setString(4, email);
+            ps.setString(5, phone);
+            ps.setString(6, address);
+            int rowsAffected = ps.executeUpdate();
+            System.out.println("Rows affected by registerUser: " + rowsAffected);
+            return rowsAffected > 0;
+        } catch (Exception e) {
+            System.out.println("Error at registerUser: " + e.toString());
+            return false;
+        }
+    }
+
+    public boolean isAccountOrEmailExists(String account, String email) {
+        String sql = "SELECT userID FROM tblUser WHERE account = ? OR email = ?";
+        try (Connection conn = DButils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, account);
+            ps.setString(2, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (Exception e) {
+            System.out.println("Error at isAccountOrEmailExists: " + e.toString());
+            return false;
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package controller;
 
+import dao.DiscountDAO;
 import dto.FishDTO;
 import dto.OrderDTO;
 import dao.FishDAO;
@@ -8,6 +9,7 @@ import dao.OrderDAO;
 import dao.OrderDetailDAO;
 import dao.PaymentDAO;
 import dao.UserDAO;
+import dto.DiscountDTO;
 import dto.InvoiceDTO;
 import dto.OrderDetailDTO;
 import dto.UserDTO;
@@ -32,6 +34,7 @@ public class CartController extends HttpServlet {
     private OrderDetailDAO oddao = new OrderDetailDAO();
     private InvoiceDAO idao = new InvoiceDAO();
     private PaymentDAO pdao = new PaymentDAO(); // Thêm PaymentDAO
+    private DiscountDAO ddao = new DiscountDAO();
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -57,6 +60,9 @@ public class CartController extends HttpServlet {
                     break;
                 case "checkout":
                     url = processCheckout(request, response, userId);
+                    break;
+                case "applyDiscount":
+                    url = applyDiscount(request, response, userId);
                     break;
                 case "pay":
                     url = processPayment(request, response, userId);
@@ -236,17 +242,82 @@ public class CartController extends HttpServlet {
         return url;
     }
 
-    private String processPayment(HttpServletRequest request, HttpServletResponse response, int userId)
+    private String applyDiscount(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
         String invoiceIdStr = request.getParameter("invoiceId");
+        String discountCode = request.getParameter("discountCode");
         String url = INVOICE_PAGE;
-        PaymentDAO pdao = new PaymentDAO();
 
         try {
             int invoiceId = Integer.parseInt(invoiceIdStr);
             InvoiceDTO invoice = idao.getInvoiceById(invoiceId);
             if (invoice != null) {
-                // Kiểm tra xem hóa đơn đã thanh toán chưa
+                double finalPrice = invoice.getFinalPrice();
+                double discountAmount = 0.0;
+                Integer discountID = null;
+
+                if (discountCode != null && !discountCode.trim().isEmpty()) {
+                    DiscountDTO discount = ddao.getDiscountByCode(discountCode);
+                    if (discount != null) {
+                        java.util.Date today = new java.util.Date();
+                        java.util.Date startDate = new java.util.Date(discount.getStart_date().getTime());
+                        java.util.Date endDate = new java.util.Date(discount.getEnd_date().getTime());
+                        System.out.println("Today: " + today + ", Start Date: " + startDate + ", End Date: " + endDate);
+
+                        if (discount.getStatus().equals("active") && today.after(startDate) && today.before(endDate)) {
+                            double discountPercentage = discount.getDiscount_percentage();
+                            double maxDiscount = discount.getDiscount_amount();
+                            discountAmount = (discountPercentage / 100) * finalPrice;
+                            System.out.println("Initial discount amount: " + discountAmount + ", Max discount: " + maxDiscount);
+                            if (discountAmount > maxDiscount) {
+                                discountAmount = maxDiscount;
+                                System.out.println("Discount amount capped at max: " + discountAmount);
+                            }
+                            finalPrice -= discountAmount;
+                            discountID = discount.getDiscoutID();
+                            System.out.println("Applying discount: invoiceId=" + invoiceId + ", discountID=" + discountID + ", discountAmount=" + discountAmount + ", finalPrice=" + finalPrice);
+                            if (idao.updateDiscount(invoiceId, discountID, discountAmount, finalPrice)) {
+                                invoice.setDiscountID(discountID);
+                                invoice.setDiscount_amount(discountAmount);
+                                invoice.setFinalPrice(finalPrice);
+                                request.setAttribute("discountMessage", "Áp dụng mã giảm giá thành công! Giảm: " + discountAmount + " VND");
+                                request.setAttribute("appliedDiscountCode", discountCode);
+                            } else {
+                                request.setAttribute("discountMessage", "Lỗi khi áp dụng mã giảm giá!");
+                                System.out.println("Failed to apply discount for invoiceId=" + invoiceId);
+                            }
+                        } else {
+                            request.setAttribute("discountMessage", "Mã giảm giá đã hết hạn hoặc không hợp lệ!");
+                        }
+                    } else {
+                        request.setAttribute("discountMessage", "Mã giảm giá không tồn tại!");
+                    }
+                }
+                request.setAttribute("invoice", invoice);
+            } else {
+                request.setAttribute("message", "Không tìm thấy thông tin hóa đơn!");
+                log("Invoice not found for invoiceId: " + invoiceId);
+            }
+        } catch (NumberFormatException e) {
+            request.setAttribute("message", "ID hóa đơn không hợp lệ!");
+            log("Error at applyDiscount - NumberFormatException: " + e.toString());
+        } catch (Exception e) {
+            request.setAttribute("message", "Lỗi khi áp dụng mã giảm giá: " + e.getMessage());
+            log("Error at applyDiscount: " + e.toString());
+        }
+
+        return url;
+    }
+
+    private String processPayment(HttpServletRequest request, HttpServletResponse response, int userId)
+            throws ServletException, IOException {
+        String invoiceIdStr = request.getParameter("invoiceId");
+        String url = INVOICE_PAGE;
+
+        try {
+            int invoiceId = Integer.parseInt(invoiceIdStr);
+            InvoiceDTO invoice = idao.getInvoiceById(invoiceId);
+            if (invoice != null) {
                 if (pdao.isInvoicePaid(invoiceId)) {
                     request.setAttribute("message", "Hóa đơn này đã được thanh toán!");
                     request.setAttribute("invoice", invoice);
@@ -254,34 +325,29 @@ public class CartController extends HttpServlet {
                     return url;
                 }
 
-                UserDTO user = (UserDTO) request.getSession().getAttribute("user");
-                user = udao.getUserById(userId); // Lấy thông tin mới nhất từ DB
+                UserDTO user = udao.getUserById(userId);
                 if (user != null) {
                     double balance = user.getBalance();
                     System.out.println("Balance of user " + userId + ": " + balance);
                     double finalPrice = invoice.getFinalPrice();
+
                     if (balance >= finalPrice) {
                         double newBalance = balance - finalPrice;
-                        // Chỉ thực hiện các thay đổi khi mọi bước đều thành công
                         if (udao.updateBalance(userId, newBalance)) {
                             if (pdao.createPayment(invoiceId, finalPrice)) {
-                                // Cập nhật trạng thái đơn hàng thành 'completed'
                                 int orderId = invoice.getOrderID();
                                 if (odao.updateOrderStatus(orderId, "completed")) {
-                                    // Cập nhật UserDTO trong session
                                     user.setBalance(newBalance);
                                     request.getSession().setAttribute("user", user);
                                     request.setAttribute("message", "Thanh toán thành công!");
                                     log("Payment successful for invoice " + invoiceId + ", order " + orderId + " completed, new balance: " + newBalance);
                                 } else {
-                                    // Hoàn tác nếu cập nhật trạng thái thất bại
                                     udao.updateBalance(userId, balance);
-                                    pdao.deletePayment(invoiceId); // Xóa bản ghi thanh toán nếu có
+                                    pdao.deletePayment(invoiceId);
                                     request.setAttribute("message", "Lỗi khi cập nhật trạng thái đơn hàng!");
                                     log("Failed to update order status for order " + orderId);
                                 }
                             } else {
-                                // Hoàn tác nếu ghi nhận thanh toán thất bại
                                 udao.updateBalance(userId, balance);
                                 request.setAttribute("message", "Lỗi khi ghi nhận thanh toán!");
                                 log("Failed to create payment record for invoice " + invoiceId + ", balance restored");

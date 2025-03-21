@@ -71,7 +71,7 @@ public class DiscountDAO implements IDAO<DiscountDTO, String> {
     }
 
     public DiscountDTO getDiscountByCode(String code) {
-        String sql = "SELECT code, discount_percentage, discount_amount, start_date, end_date, status "
+        String sql = "SELECT discountID, code, discount_percentage, discount_amount, start_date, end_date, status "
                 + "FROM tblDiscount WHERE code = ?";
         try (Connection conn = DButils.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -79,6 +79,7 @@ public class DiscountDAO implements IDAO<DiscountDTO, String> {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return new DiscountDTO(
+                            rs.getInt("discountID"),
                             rs.getString("code"),
                             rs.getDouble("discount_percentage"),
                             rs.getDouble("discount_amount"),
@@ -93,11 +94,12 @@ public class DiscountDAO implements IDAO<DiscountDTO, String> {
         }
         return null;
     }
+
     public DiscountDTO getDiscountById(int discountID) {
-        String sql = "SELECT discountID, code, discount_percentage, discount_amount, start_date, end_date, status " +
-                     "FROM tblDiscount WHERE discountID = ?";
+        String sql = "SELECT discountID, code, discount_percentage, discount_amount, start_date, end_date, status "
+                + "FROM tblDiscount WHERE discountID = ?";
         try (Connection conn = DButils.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, discountID);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
