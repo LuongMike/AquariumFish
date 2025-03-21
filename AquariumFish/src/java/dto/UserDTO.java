@@ -18,10 +18,17 @@ public class UserDTO {
     private String phone;
     private String address;
     private String role;   
+    private double balance;
 
     public UserDTO() {
     }
 
+    public UserDTO(int userId, String userName, double balance) {
+        this.userId = userId;
+        this.userName = userName;
+        this.balance = balance;
+    }
+    
     public UserDTO(int userId, String userName, String account, String password, String email, String phone, String address, String role) {
         this.userId = userId;
         this.userName = userName;
@@ -32,6 +39,29 @@ public class UserDTO {
         this.address = address;
         this.role = role;
     }
+
+    public UserDTO(int userId, String userName, String account, String password, String email, String phone, String address, String role, double balance) {
+        this.userId = userId;
+        this.userName = userName;
+        this.account = account;
+        this.password = password;
+        this.email = email;
+        this.phone = phone;
+        this.address = address;
+        this.role = role;
+        this.balance = balance;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
+
+
+    
 
     public int getUserId() {
         return userId;

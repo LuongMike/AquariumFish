@@ -32,8 +32,10 @@ public class MainController extends HttpServlet {
 
         if (AuthenUtils.isValidLogin(account, password)) {
             UserDTO user = AuthenUtils.getUser(account);
+            int userId = user.getUserId();
             request.getSession().setAttribute("username", user.getUserName());
             request.getSession().setAttribute("user", user);
+            request.getSession().setAttribute("userId", userId);
             url = SUCCESS_PAGE;
         } else {
             request.setAttribute("loginError", "Tài khoản hoặc mật khẩu không đúng. Vui lòng thử lại!");

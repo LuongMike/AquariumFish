@@ -197,4 +197,43 @@ public class UserDAO implements IDAO<UserDTO, String> {
         return list;
     }
 
+    public UserDTO getUserById(int id) {
+        String sql = "SELECT * FROM [tblUser] WHERE [userID] = ?";
+        try {
+            Connection conn = DButils.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return new UserDTO(
+                        rs.getInt("userID"),
+                        rs.getString("userName"),
+                        rs.getString("account"),
+                        rs.getString("password"),
+                        rs.getString("email"),
+                        rs.getString("phone"),
+                        rs.getString("address"),
+                        rs.getString("role"),
+                        rs.getDouble("balance")
+                );
+            }
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
+        return null;
+    }
+
+    public boolean updateBalance(int userId, double newBalance) {
+        String sql = "UPDATE tblUser SET balance = ? WHERE userID = ?";
+        try (Connection conn = DButils.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDouble(1, newBalance);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.out.println("Error at updateBalance: " + e.toString());
+        }
+        return false;
+    }
 }

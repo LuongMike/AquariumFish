@@ -13,6 +13,12 @@
             <h1>Chi Tiết Cá</h1>
             <% 
                 FishDTO fish = (FishDTO) request.getAttribute("fish");
+                String message = (String) request.getAttribute("message");
+                if (message != null) {
+            %>
+                <p class="message <%= message.contains("thành công") ? "success" : "error" %>"><%= message %></p>
+            <% } %>
+            <% 
                 if (fish != null) {
             %>
             <div class="fish-details">
@@ -28,19 +34,26 @@
                     <p><strong>Loại Cá:</strong> <%= fish.getFishType() %></p>
                     <p><strong>Tên Cá:</strong> <%= fish.getFishName() %></p>
                     <p><strong>Giá:</strong> <%= fish.getFishPrice() %> VND</p>
-                    <p><strong>Số Lượng:</strong> <%= fish.getFishQuantity() %></p>
+                    <p><strong>Số Lượng Còn Lại:</strong> <%= fish.getFishQuantity() %></p>
                     <p><strong>Mô Tả:</strong> <%= fish.getFishDescription() %></p>
                     <p><strong>Danh Mục ID:</strong> <%= fish.getCategoryID() %></p>
-                    <form action="CartController" method="post">
+                    <% 
+                        Integer userId = (Integer) session.getAttribute("userId");
+                        if (userId != null) {
+                    %>
+                    <form action="<%= request.getContextPath() %>/CartController" method="post">
                         <input type="hidden" name="fishId" value="<%= fish.getFishID() %>">
-                        <input type="hidden" name="action" value="addToCart">
+                        <input type="hidden" name="action" value="add">
                         <button type="submit" class="btn add-to-cart">Add to Cart</button>
                     </form>
-                    <form action="CartController" method="post">
+                    <form action="<%= request.getContextPath() %>/CartController" method="post">
                         <input type="hidden" name="fishId" value="<%= fish.getFishID() %>">
                         <input type="hidden" name="action" value="buyNow">
                         <button type="submit" class="btn buy-now">Mua Ngay</button>
                     </form>
+                    <% } else { %>
+                    <p class="error">Vui lòng <a href="login.jsp">đăng nhập</a> để thêm vào giỏ hàng!</p>
+                    <% } %>
                 </div>
             </div>
             <% } else { %>
