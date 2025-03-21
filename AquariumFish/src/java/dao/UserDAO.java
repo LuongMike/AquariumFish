@@ -119,7 +119,8 @@ public class UserDAO implements IDAO<UserDTO, String> {
                         rs.getString("email"),
                         rs.getString("phone"),
                         rs.getString("address"),
-                        rs.getString("role")
+                        rs.getString("role"),
+                        rs.getDouble("balance")
                 );
             }
         } catch (ClassNotFoundException | SQLException ex) {

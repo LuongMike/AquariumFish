@@ -1,3 +1,4 @@
+<%@page import="dto.UserDTO"%>
 <%@page import="dto.OrderDetailDTO"%>
 <%@page import="dto.OrderDTO"%>
 <%@page import="dao.OrderDAO"%>
@@ -67,6 +68,7 @@
                 }
             }
         %>
+        <a href="product.jsp">Tiếp Tục Mua Sắm</a>
         <a href="index.jsp">Quay lại</a>
         <jsp:include page="footer.jsp" />
     </body>

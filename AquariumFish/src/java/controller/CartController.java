@@ -168,23 +168,17 @@ public class CartController extends HttpServlet {
 
     private String processRemoveFromCart(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
-        String orderDetailId = request.getParameter("orderDetailId");
+        String orderDetailIdStr = request.getParameter("orderDetailId");
         String url = CART_PAGE;
 
         try {
-            OrderDTO order = odao.getPendingOrderByUserId(userId);
-            if (order != null) {
-                int orderId = order.getOrderID();
-                boolean removed = oddao.removeOrderDetail(Integer.parseInt(orderDetailId));
-                if (removed) {
-                    double totalPrice = calculateTotalPrice(orderId);
-                    odao.updateTotalPrice(orderId, totalPrice);
-                    request.setAttribute("message", "Đã xóa sản phẩm khỏi giỏ hàng!");
-                } else {
-                    request.setAttribute("message", "Không thể xóa sản phẩm!");
-                }
+            int orderDetailId = Integer.parseInt(orderDetailIdStr);
+            if (oddao.removeOrderDetail(orderDetailId)) {
+                request.setAttribute("message", "Đã xóa sản phẩm khỏi giỏ hàng!");
+                log("Removed order detail " + orderDetailId + " for user " + userId);
             } else {
-                request.setAttribute("message", "Không tìm thấy giỏ hàng!");
+                request.setAttribute("message", "Không thể xóa sản phẩm!");
+                log("Failed to remove order detail " + orderDetailId);
             }
         } catch (NumberFormatException e) {
             request.setAttribute("message", "ID chi tiết đơn hàng không hợp lệ!");

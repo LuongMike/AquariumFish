@@ -27,34 +27,33 @@ public class DiscountDAO implements IDAO<DiscountDTO, String> {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-@Override
-public List<DiscountDTO> readAll() {
-    List<DiscountDTO> list = new ArrayList<>();
-    String sql = "SELECT * FROM tblDiscount";
-    
-    try (Connection conn = DButils.getConnection();
-         PreparedStatement ps = conn.prepareStatement(sql);
-         ResultSet rs = ps.executeQuery()) {
-        
-        while (rs.next()) {
-            DiscountDTO discount = new DiscountDTO(
-                rs.getInt("discountID"),
-                rs.getString("code"),
-                rs.getDouble("discount_percentage"),
-                rs.getDouble("discount_amount"),
-                rs.getDate("start_date"),
-                rs.getDate("end_date"),
-                rs.getString("status")
-            );
-            list.add(discount);
-        }        
-    } catch (ClassNotFoundException | SQLException ex) {
-        Logger.getLogger(DiscountDAO.class.getName()).log(Level.SEVERE, null, ex);
-    }
-    
-    return list;
-}
+    @Override
+    public List<DiscountDTO> readAll() {
+        List<DiscountDTO> list = new ArrayList<>();
+        String sql = "SELECT * FROM tblDiscount";
 
+        try (Connection conn = DButils.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                DiscountDTO discount = new DiscountDTO(
+                        rs.getInt("discountID"),
+                        rs.getString("code"),
+                        rs.getDouble("discount_percentage"),
+                        rs.getDouble("discount_amount"),
+                        rs.getDate("start_date"),
+                        rs.getDate("end_date"),
+                        rs.getString("status")
+                );
+                list.add(discount);
+            }
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(DiscountDAO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return list;
+    }
 
     @Override
     public boolean update(DiscountDTO entity) {
@@ -71,4 +70,51 @@ public List<DiscountDTO> readAll() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    public DiscountDTO getDiscountByCode(String code) {
+        String sql = "SELECT code, discount_percentage, discount_amount, start_date, end_date, status "
+                + "FROM tblDiscount WHERE code = ?";
+        try (Connection conn = DButils.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, code);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new DiscountDTO(
+                            rs.getString("code"),
+                            rs.getDouble("discount_percentage"),
+                            rs.getDouble("discount_amount"),
+                            rs.getDate("start_date"),
+                            rs.getDate("end_date"),
+                            rs.getString("status")
+                    );
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error at getDiscountByCode: " + e.toString());
+        }
+        return null;
+    }
+    public DiscountDTO getDiscountById(int discountID) {
+        String sql = "SELECT discountID, code, discount_percentage, discount_amount, start_date, end_date, status " +
+                     "FROM tblDiscount WHERE discountID = ?";
+        try (Connection conn = DButils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, discountID);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new DiscountDTO(
+                            rs.getInt("discountID"),
+                            rs.getString("code"),
+                            rs.getDouble("discount_percentage"),
+                            rs.getDouble("discount_amount"),
+                            rs.getDate("start_date"),
+                            rs.getDate("end_date"),
+                            rs.getString("status")
+                    );
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error at getDiscountById: " + e.toString());
+        }
+        return null;
+    }
 }

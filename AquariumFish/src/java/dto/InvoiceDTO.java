@@ -18,6 +18,8 @@ public class InvoiceDTO {
     private double tax;
     private double finalPrice;
     private Timestamp issuedAt;
+    private int discountID;
+    private double discount_amount;
 
     public InvoiceDTO() {
     }
@@ -31,6 +33,37 @@ public class InvoiceDTO {
         this.issuedAt = issuedAt;
     }
 
+    public InvoiceDTO(int invoiceID, int orderID, double totalPrice, double tax, double finalPrice, Timestamp issuedAt, int discountID, double discount_amount) {
+        this.invoiceID = invoiceID;
+        this.orderID = orderID;
+        this.totalPrice = totalPrice;
+        this.tax = tax;
+        this.finalPrice = finalPrice;
+        this.issuedAt = issuedAt;
+        this.discountID = discountID;
+        this.discount_amount = discount_amount;
+    }
+
+    public int getDiscountID() {
+        return discountID;
+    }
+
+    public void setDiscountID(int discountID) {
+        this.discountID = discountID;
+    }
+
+    public double getDiscount_amount() {
+        return discount_amount;
+    }
+
+    public void setDiscount_amount(double discount_amount) {
+        this.discount_amount = discount_amount;
+    }
+
+    
+    
+   
+    
     public int getInvoiceID() {
         return invoiceID;
     }

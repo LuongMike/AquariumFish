@@ -30,6 +30,25 @@ public class InvoiceDAO {
         }
         return -1;
     }
+    
+    public boolean updateDiscount(int invoiceId, Integer discountID, double discountAmount, double finalPrice) {
+        String sql = "UPDATE tblInvoice SET discountID = ?, discount_amount = ?, final_price = ? WHERE invoiceID = ?";
+        try (Connection conn = DButils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (discountID != null) {
+                ps.setInt(1, discountID);
+            } else {
+                ps.setNull(1, java.sql.Types.INTEGER);
+            }
+            ps.setDouble(2, discountAmount);
+            ps.setDouble(3, finalPrice);
+            ps.setInt(4, invoiceId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.out.println("Error at updateDiscount: " + e.toString());
+        }
+        return false;
+    }
 
     public InvoiceDTO getInvoiceByOrderId(int orderId) {
         String sql = "SELECT * FROM tblInvoice WHERE orderID = ?";

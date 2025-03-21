@@ -33,6 +33,15 @@ public class DiscountDTO {
         this.status = status;
     }
 
+    public DiscountDTO(String code, double discount_percentage, double discount_amount, Date start_date, Date end_date, String status) {
+        this.code = code;
+        this.discount_percentage = discount_percentage;
+        this.discount_amount = discount_amount;
+        this.start_date = start_date;
+        this.end_date = end_date;
+        this.status = status;
+    }
+
     public int getDiscoutID() {
         return discoutID;
     }
