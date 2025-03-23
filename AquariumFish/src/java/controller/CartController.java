@@ -45,7 +45,6 @@ public class CartController extends HttpServlet {
         Integer userId = (Integer) session.getAttribute("userId");
 
         if (userId == null) {
-            // Redirect đến trang đăng nhập nếu chưa đăng nhập
             response.sendRedirect("login.jsp");
             return;
         }
@@ -54,7 +53,7 @@ public class CartController extends HttpServlet {
             switch (action) {
                 case "add":
                     processAddToCart(request, response, userId);
-                    return; // Dừng xử lý sau redirect
+                    return;
                 case "buyNow":
                     processBuyNow(request, response, userId);
                     return;
@@ -78,18 +77,36 @@ public class CartController extends HttpServlet {
             request.setAttribute("message", "No action specified!");
         }
 
-        // Forward nếu không có redirect
         getServletContext().getRequestDispatcher(CART_PAGE).forward(request, response);
     }
 
     private void processAddToCart(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
         String fishId = request.getParameter("fishId");
+        String quantityStr = request.getParameter("quantity");
 
         try {
             FishDTO fish = fdao.readbyID(fishId);
             if (fish != null) {
-                // Kiểm tra hoặc tạo đơn hàng pending
+                int quantity = 1;
+                try {
+                    quantity = Integer.parseInt(quantityStr);
+                    if (quantity <= 0) {
+                        request.getSession().setAttribute("message", "Quantity must be greater than 0!");
+                        response.sendRedirect(CART_PAGE);
+                        return;
+                    }
+                    if (quantity > fish.getFishQuantity()) {
+                        request.getSession().setAttribute("message", "Requested quantity exceeds available stock (" + fish.getFishQuantity() + ")!");
+                        response.sendRedirect(CART_PAGE);
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    request.getSession().setAttribute("message", "Invalid quantity!");
+                    response.sendRedirect(CART_PAGE);
+                    return;
+                }
+
                 OrderDTO order = odao.getPendingOrderByUserId(userId);
                 int orderId;
                 if (order == null) {
@@ -99,17 +116,27 @@ public class CartController extends HttpServlet {
                 }
 
                 if (orderId != -1) {
-                    // Thêm chi tiết đơn hàng
-                    boolean added = oddao.addOrderDetail(orderId, fish.getFishID(), 1, fish.getFishPrice());
-                    if (added) {
-                        // Cập nhật tổng giá
-                        double totalPrice = calculateTotalPrice(orderId);
-                        odao.updateTotalPrice(orderId, totalPrice);
-                        // Lưu thông báo vào session để hiển thị sau khi redirect
-                        request.getSession().setAttribute("message", "Added " + fish.getFishName() + " to cart!");
+                    OrderDetailDTO existingDetail = oddao.getOrderDetailByOrderIdAndFishId(orderId, fish.getFishID());
+                    if (existingDetail != null) {
+                        int newQuantity = existingDetail.getQuantity() + quantity;
+                        if (newQuantity > fish.getFishQuantity()) {
+                            request.getSession().setAttribute("message", "Total quantity exceeds available stock (" + fish.getFishQuantity() + ")!");
+                            response.sendRedirect(CART_PAGE);
+                            return;
+                        }
+                        oddao.updateOrderDetailQuantity(existingDetail.getOrderDetailID(), newQuantity);
                     } else {
-                        request.getSession().setAttribute("message", "Failed to add item to cart!");
+                        boolean added = oddao.addOrderDetail(orderId, fish.getFishID(), quantity, fish.getFishPrice());
+                        if (!added) {
+                            request.getSession().setAttribute("message", "Failed to add item to cart!");
+                            response.sendRedirect(CART_PAGE);
+                            return;
+                        }
                     }
+
+                    double totalPrice = calculateTotalPrice(orderId);
+                    odao.updateTotalPrice(orderId, totalPrice);
+                    request.getSession().setAttribute("message", "Added " + quantity + " " + fish.getFishName() + " to cart!");
                 } else {
                     request.getSession().setAttribute("message", "Failed to create order!");
                 }
@@ -121,7 +148,6 @@ public class CartController extends HttpServlet {
             log("Error at processAddToCart: " + e.toString());
         }
 
-        // Redirect đến trang giỏ hàng
         response.sendRedirect(CART_PAGE);
     }
 
@@ -147,7 +173,6 @@ public class CartController extends HttpServlet {
                         odao.updateTotalPrice(orderId, totalPrice);
                         int invoiceId = idao.createInvoice(orderId, totalPrice);
                         if (invoiceId != -1) {
-                            // Lưu thông tin hóa đơn vào session để hiển thị sau khi redirect
                             request.getSession().setAttribute("invoiceId", invoiceId);
                             request.getSession().setAttribute("message", "Invoice created successfully! Please proceed to payment.");
                         } else {
@@ -167,7 +192,6 @@ public class CartController extends HttpServlet {
             log("Error at processBuyNow: " + e.toString());
         }
 
-        // Redirect đến trang hóa đơn
         response.sendRedirect(INVOICE_PAGE);
     }
 
@@ -177,7 +201,17 @@ public class CartController extends HttpServlet {
 
         try {
             int orderDetailId = Integer.parseInt(orderDetailIdStr);
+            OrderDetailDTO detail = oddao.getOrderDetailById(orderDetailId);
+            if (detail == null) {
+                request.getSession().setAttribute("message", "Order detail not found!");
+                response.sendRedirect(CART_PAGE);
+                return;
+            }
+
+            int orderId = detail.getOrderID();
             if (oddao.removeOrderDetail(orderDetailId)) {
+                double totalPrice = calculateTotalPrice(orderId);
+                odao.updateTotalPrice(orderId, totalPrice);
                 request.getSession().setAttribute("message", "Item removed from cart!");
                 log("Removed order detail " + orderDetailId + " for user " + userId);
             } else {
@@ -192,28 +226,25 @@ public class CartController extends HttpServlet {
             log("Error at processRemoveFromCart: " + e.toString());
         }
 
-        // Redirect đến trang giỏ hàng
         response.sendRedirect(CART_PAGE);
     }
 
     private void processCheckout(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
         String orderIdStr = request.getParameter("orderId");
-        PaymentDAO pdao = new PaymentDAO();
 
         try {
             int orderId = Integer.parseInt(orderIdStr);
             OrderDTO order = odao.getPendingOrderByUserId(userId);
             if (order != null && order.getOrderID() == orderId) {
-                // Kiểm tra xem đơn hàng đã có hóa đơn chưa
                 InvoiceDTO existingInvoice = idao.getInvoiceByOrderId(orderId);
                 if (existingInvoice != null && !pdao.isInvoicePaid(existingInvoice.getInvoiceID())) {
-                    // Xóa hóa đơn cũ chưa thanh toán
                     idao.deleteInvoice(existingInvoice.getInvoiceID());
                     log("Deleted unpaid invoice " + existingInvoice.getInvoiceID() + " for order " + orderId);
                 }
 
                 double totalPrice = calculateTotalPrice(orderId);
+                odao.updateTotalPrice(orderId, totalPrice);
                 int invoiceId = idao.createInvoice(orderId, totalPrice);
                 if (invoiceId != -1) {
                     request.getSession().setAttribute("invoiceId", invoiceId);
@@ -232,7 +263,6 @@ public class CartController extends HttpServlet {
             log("Error at processCheckout: " + e.toString());
         }
 
-        // Redirect đến trang hóa đơn
         response.sendRedirect(INVOICE_PAGE);
     }
 
@@ -271,6 +301,7 @@ public class CartController extends HttpServlet {
                             System.out.println("Applying discount: invoiceId=" + invoiceId + ", discountID=" + discountID + ", discountAmount=" + discountAmount + ", finalPrice=" + finalPrice);
                             if (idao.updateDiscount(invoiceId, discountID, discountAmount, finalPrice)) {
                                 request.getSession().setAttribute("discountMessage", "Discount applied successfully! Discount: " + discountAmount + " VND");
+                                request.getSession().setAttribute("discountAmount", discountAmount);
                                 request.getSession().setAttribute("appliedDiscountCode", discountCode);
                             } else {
                                 request.getSession().setAttribute("discountMessage", "Error applying discount!");
@@ -296,161 +327,214 @@ public class CartController extends HttpServlet {
             log("Error at applyDiscount: " + e.toString());
         }
 
-        // Redirect đến trang hóa đơn
         response.sendRedirect(INVOICE_PAGE);
     }
 
-    private void processPayment(HttpServletRequest request, HttpServletResponse response, int userId)
-            throws ServletException, IOException {
-        String invoiceIdStr = request.getParameter("invoiceId");
-        boolean isPaymentSuccessful = false; // Theo dõi trạng thái thanh toán
+   private void processPayment(HttpServletRequest request, HttpServletResponse response, int userId)
+        throws ServletException, IOException {
+    String invoiceIdStr = request.getParameter("invoiceId");
+    boolean isPaymentSuccessful = false;
 
+    try {
+        int invoiceId = Integer.parseInt(invoiceIdStr);
+        InvoiceDTO invoice = idao.getInvoiceById(invoiceId);
+        if (invoice == null) {
+            request.getSession().setAttribute("message", "Invoice information not found!");
+            log("Invoice not found for invoiceId: " + invoiceId);
+            response.sendRedirect(INVOICE_PAGE);
+            return;
+        }
+
+        if (pdao.isInvoicePaid(invoiceId)) {
+            request.getSession().setAttribute("message", "This invoice has already been paid!");
+            request.getSession().setAttribute("invoiceId", invoiceId);
+            log("Invoice " + invoiceId + " already paid");
+            response.sendRedirect(INVOICE_PAGE);
+            return;
+        }
+
+        UserDTO user = udao.getUserById(userId);
+        if (user == null) {
+            request.getSession().setAttribute("message", "User information not found!");
+            log("User not found for userId: " + userId);
+            response.sendRedirect(INVOICE_PAGE);
+            return;
+        }
+
+        double balance = user.getBalance();
+        System.out.println("Balance of user " + userId + ": " + balance);
+        double finalPrice = invoice.getFinalPrice();
+
+        if (balance < finalPrice) {
+            request.getSession().setAttribute("message", "Insufficient balance!");
+            log("Insufficient balance for user " + userId + ": " + balance + " < " + finalPrice);
+            response.sendRedirect(INVOICE_PAGE);
+            return;
+        }
+
+        // Lấy danh sách OrderDetailDTO để kiểm tra số lượng sản phẩm
+        int orderId = invoice.getOrderID();
+        List<OrderDetailDTO> orderDetails = oddao.getOrderDetailsByOrderId(orderId);
+        if (orderDetails == null || orderDetails.isEmpty()) {
+            request.getSession().setAttribute("message", "No items found in the order!");
+            log("No order details found for order " + orderId);
+            response.sendRedirect(INVOICE_PAGE);
+            return;
+        }
+
+        // Kiểm tra số lượng sản phẩm trước khi thanh toán
+        for (OrderDetailDTO detail : orderDetails) {
+            int fishId = detail.getFishID();
+            int quantityOrdered = detail.getQuantity();
+            int currentQuantity = fdao.getFishQuantity(fishId);
+            if (currentQuantity == -1) {
+                request.getSession().setAttribute("message", "Product with ID " + fishId + " not found!");
+                log("Fish not found for fishId: " + fishId);
+                response.sendRedirect(INVOICE_PAGE);
+                return;
+            }
+            if (currentQuantity < quantityOrdered) {
+                request.getSession().setAttribute("message", "Insufficient stock for product with ID " + fishId + "! Available: " + currentQuantity + ", Ordered: " + quantityOrdered);
+                log("Insufficient stock for fish " + fishId + ": available=" + currentQuantity + ", ordered=" + quantityOrdered);
+                response.sendRedirect(INVOICE_PAGE);
+                return;
+            }
+        }
+
+        // Trừ số dư người dùng
+        double newBalance = balance - finalPrice;
+        if (!udao.updateBalance(userId, newBalance)) {
+            request.getSession().setAttribute("message", "Error updating balance!");
+            log("Failed to update balance for user " + userId);
+            response.sendRedirect(INVOICE_PAGE);
+            return;
+        }
+
+        // Ghi lại thanh toán
+        if (!pdao.createPayment(invoiceId, finalPrice)) {
+            udao.updateBalance(userId, balance); // Hoàn tác số dư
+            request.getSession().setAttribute("message", "Error recording payment!");
+            log("Failed to create payment record for invoice " + invoiceId + ", balance restored");
+            response.sendRedirect(INVOICE_PAGE);
+            return;
+        }
+
+        // Cập nhật trạng thái đơn hàng
+        if (!odao.updateOrderStatus(orderId, "completed")) {
+            udao.updateBalance(userId, balance); // Hoàn tác số dư
+            pdao.deletePayment(invoiceId); // Hoàn tác thanh toán
+            request.getSession().setAttribute("message", "Error updating order status!");
+            log("Failed to update order status for order " + orderId);
+            response.sendRedirect(INVOICE_PAGE);
+            return;
+        }
+
+        // Cập nhật phương thức thanh toán
+        if (!odao.updateOrderPayment(orderId)) {
+            log("Failed to update payment method for order " + orderId);
+        } else {
+            log("Payment method updated to 'balance' for order " + orderId);
+        }
+
+        // Trừ số lượng sản phẩm trong bảng tblFish
+        boolean stockUpdated = true;
+        for (OrderDetailDTO detail : orderDetails) {
+            int fishId = detail.getFishID();
+            int quantityOrdered = detail.getQuantity();
+            int currentQuantity = fdao.getFishQuantity(fishId);
+            int newQuantity = currentQuantity - quantityOrdered;
+            if (!fdao.updateFishQuantity(fishId, newQuantity)) {
+                stockUpdated = false;
+                log("Failed to update stock for fish " + fishId + ": new quantity=" + newQuantity);
+                break;
+            }
+        }
+
+        if (!stockUpdated) {
+            // Hoàn tác các thay đổi nếu cập nhật số lượng thất bại
+            udao.updateBalance(userId, balance); // Hoàn tác số dư
+            pdao.deletePayment(invoiceId); // Hoàn tác thanh toán
+            odao.updateOrderStatus(orderId, "pending"); // Hoàn tác trạng thái đơn hàng
+            request.getSession().setAttribute("message", "Error updating product stock!");
+            log("Failed to update product stock, transaction rolled back for invoice " + invoiceId);
+            response.sendRedirect(INVOICE_PAGE);
+            return;
+        }
+
+        // Cập nhật thông tin người dùng và thông báo thành công
+        user.setBalance(newBalance);
+        request.getSession().setAttribute("user", user);
+        request.getSession().setAttribute("message", "Payment successful!");
+        request.getSession().setAttribute("invoiceId", invoiceId);
+        log("Payment successful for invoice " + invoiceId + ", order " + orderId + " completed, new balance: " + newBalance);
+
+        isPaymentSuccessful = true;
+
+        response.sendRedirect(INVOICE_PAGE);
+
+    } catch (NumberFormatException e) {
+        request.getSession().setAttribute("message", "Invalid invoice ID!");
+        log("Error at processPayment - NumberFormatException: " + e.toString());
+        response.sendRedirect(INVOICE_PAGE);
+    } catch (Exception e) {
+        String errorMessage = e.getMessage() != null ? e.getMessage() : "Unknown error";
+        log("Error at processPayment: " + errorMessage, e);
+        request.getSession().setAttribute("message", "Error processing payment: " + errorMessage);
+        response.sendRedirect(INVOICE_PAGE);
+    }
+
+    if (isPaymentSuccessful) {
         try {
             int invoiceId = Integer.parseInt(invoiceIdStr);
             InvoiceDTO invoice = idao.getInvoiceById(invoiceId);
-            if (invoice == null) {
-                request.getSession().setAttribute("message", "Invoice information not found!");
-                log("Invoice not found for invoiceId: " + invoiceId);
-                response.sendRedirect(INVOICE_PAGE);
-                return;
-            }
-
-            if (pdao.isInvoicePaid(invoiceId)) {
-                request.getSession().setAttribute("message", "This invoice has already been paid!");
-                request.getSession().setAttribute("invoiceId", invoiceId);
-                log("Invoice " + invoiceId + " already paid");
-                response.sendRedirect(INVOICE_PAGE);
-                return;
-            }
-
-            UserDTO user = udao.getUserById(userId);
-            if (user == null) {
-                request.getSession().setAttribute("message", "User information not found!");
-                log("User not found for userId: " + userId);
-                response.sendRedirect(INVOICE_PAGE);
-                return;
-            }
-
-            double balance = user.getBalance();
-            System.out.println("Balance of user " + userId + ": " + balance);
-            double finalPrice = invoice.getFinalPrice();
-
-            if (balance < finalPrice) {
-                request.getSession().setAttribute("message", "Insufficient balance!");
-                log("Insufficient balance for user " + userId + ": " + balance + " < " + finalPrice);
-                response.sendRedirect(INVOICE_PAGE);
-                return;
-            }
-
-            double newBalance = balance - finalPrice;
-            if (!udao.updateBalance(userId, newBalance)) {
-                request.getSession().setAttribute("message", "Error updating balance!");
-                log("Failed to update balance for user " + userId);
-                response.sendRedirect(INVOICE_PAGE);
-                return;
-            }
-
-            if (!pdao.createPayment(invoiceId, finalPrice)) {
-                udao.updateBalance(userId, balance); // Hoàn lại số dư
-                request.getSession().setAttribute("message", "Error recording payment!");
-                log("Failed to create payment record for invoice " + invoiceId + ", balance restored");
-                response.sendRedirect(INVOICE_PAGE);
-                return;
-            }
-
-            int orderId = invoice.getOrderID();
-            if (!odao.updateOrderStatus(orderId, "completed")) {
-                udao.updateBalance(userId, balance); // Hoàn lại số dư
-                pdao.deletePayment(invoiceId); // Xóa bản ghi thanh toán
-                request.getSession().setAttribute("message", "Error updating order status!");
-                log("Failed to update order status for order " + orderId);
-                response.sendRedirect(INVOICE_PAGE);
-                return;
-            }
-
-            // Cập nhật payment_method thành "balance"
-            if (!odao.updateOrderPayment(orderId)) {
-                log("Failed to update payment method for order " + orderId);
-            } else {
-                log("Payment method updated to 'balance' for order " + orderId);
-            }
-
-            // Thanh toán thành công
-            user.setBalance(newBalance);
-            request.getSession().setAttribute("user", user);
-            request.getSession().setAttribute("message", "Payment successful!");
-            request.getSession().setAttribute("invoiceId", invoiceId);
-            log("Payment successful for invoice " + invoiceId + ", order " + orderId + " completed, new balance: " + newBalance);
-
-            // Đánh dấu thanh toán thành công
-            isPaymentSuccessful = true;
-
-            // Chuyển hướng sau khi tất cả các bước hoàn tất
-            response.sendRedirect(INVOICE_PAGE);
-
-        } catch (NumberFormatException e) {
-            request.getSession().setAttribute("message", "Invalid invoice ID!");
-            log("Error at processPayment - NumberFormatException: " + e.toString());
-            response.sendRedirect(INVOICE_PAGE);
-        } catch (Exception e) {
-            String errorMessage = e.getMessage() != null ? e.getMessage() : "Unknown error";
-            log("Error at processPayment: " + errorMessage, e);
-            request.getSession().setAttribute("message", "Error processing payment: " + errorMessage);
-            response.sendRedirect(INVOICE_PAGE);
-        }
-
-        // Gửi email xác nhận thanh toán sau khi tất cả các bước hoàn tất
-        if (isPaymentSuccessful) {
-            try {
-                int invoiceId = Integer.parseInt(invoiceIdStr); // Lấy lại invoiceId
-                InvoiceDTO invoice = idao.getInvoiceById(invoiceId);
-                if (invoice != null) {
-                    int orderId = invoice.getOrderID();
-                    OrderDTO order = odao.getOrderById(orderId);
-                    System.out.println(order);
-                    if (order == null) {
-                        log("Order not found for orderId: " + orderId + " when sending email");
+            if (invoice != null) {
+                int orderId = invoice.getOrderID();
+                OrderDTO order = odao.getOrderById(orderId);
+                System.out.println(order);
+                if (order == null) {
+                    log("Order not found for orderId: " + orderId + " when sending email");
+                } else {
+                    List<OrderDetailDTO> details = oddao.getOrderDetailsByOrderId(orderId);
+                    if (details == null) {
+                        log("Order details not found (null) for orderId: " + orderId + " when sending email");
+                    } else if (details.isEmpty()) {
+                        log("Order details are empty for orderId: " + orderId + " when sending email");
                     } else {
-                        List<OrderDetailDTO> details = oddao.getOrderDetailsByOrderId(orderId);
-                        if (details == null) {
-                            log("Order details not found (null) for orderId: " + orderId + " when sending email");
-                        } else if (details.isEmpty()) {
-                            log("Order details are empty for orderId: " + orderId + " when sending email");
+                        UserDTO user = udao.getUserById(userId);
+                        if (user == null) {
+                            log("User not found for userId: " + userId + " when sending email");
                         } else {
-                            UserDTO user = udao.getUserById(userId);
-                            if (user == null) {
-                                log("User not found for userId: " + userId + " when sending email");
+                            String userName = user.getUserName() != null ? user.getUserName() : "Customer";
+                            String userEmail = user.getEmail();
+                            if (userEmail == null || userEmail.trim().isEmpty()) {
+                                log("User email is null or empty for userId: " + userId + " when sending email");
+                                log("Using default email for testing: " + userEmail);
+                            }
+                            boolean emailSent = EmailUtils.sendPaymentConfirmationEmail(order, details, userName, userEmail);
+                            if (emailSent) {
+                                log("Payment confirmation email sent to " + userEmail);
                             } else {
-                                String userName = user.getUserName() != null ? user.getUserName() : "Customer";
-                                String userEmail = user.getEmail();
-                                if (userEmail == null || userEmail.trim().isEmpty()) {
-                                    log("User email is null or empty for userId: " + userId + " when sending email");
-                                    //userEmail = "luongdz2vnvt@gmai.com"; // Thay bằng email của bạn để kiểm tra
-                                    log("Using default email for testing: " + userEmail);
-                                }
-                                boolean emailSent = EmailUtils.sendPaymentConfirmationEmail(order, details, userName, userEmail);
-                                if (emailSent) {
-                                    log("Payment confirmation email sent to " + userEmail);
-                                } else {
-                                    log("Failed to send payment confirmation email to " + userEmail);
-                                }
+                                log("Failed to send payment confirmation email to " + userEmail);
                             }
                         }
                     }
-                } else {
-                    log("Invoice not found for invoiceId: " + invoiceId + " when sending email");
                 }
-            } catch (Exception e) {
-                log("Error sending payment confirmation email: " + e.getMessage(), e);
+            } else {
+                log("Invoice not found for invoiceId: " + invoiceId + " when sending email");
             }
+        } catch (Exception e) {
+            log("Error sending payment confirmation email: " + e.getMessage(), e);
         }
     }
+}
 
     private double calculateTotalPrice(int orderId) throws ClassNotFoundException {
         List<OrderDetailDTO> details = oddao.getOrderDetailsByOrderId(orderId);
         double total = 0.0;
-        for (OrderDetailDTO detail : details) {
-            total += detail.getQuantity() * detail.getPrice();
+        if (details != null) {
+            for (OrderDetailDTO detail : details) {
+                total += detail.getQuantity() * detail.getPrice();
+            }
         }
         return total;
     }

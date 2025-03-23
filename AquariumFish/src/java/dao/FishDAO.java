@@ -5,6 +5,7 @@
  */
 package dao;
 
+import static com.sun.xml.internal.ws.spi.db.BindingContextFactory.LOGGER;
 import dto.FishDTO;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -246,4 +247,36 @@ public class FishDAO implements IDAO<FishDTO, String> {
         return fishList;
     }
 
+    // Thêm phương thức để lấy số lượng hiện tại của sản phẩm
+    public int getFishQuantity(int fishId) throws ClassNotFoundException {
+        String sql = "SELECT fishQuantity FROM tblFish WHERE fishID = ?";
+        try (Connection conn = DButils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, fishId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("fishQuantity");
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error retrieving quantity for fish " + fishId + ": " + e.getMessage(), e);
+        }
+        return -1; // Trả về -1 nếu không tìm thấy
+    }
+
+    // Thêm phương thức để cập nhật số lượng sản phẩm
+    public boolean updateFishQuantity(int fishId, int newQuantity) throws ClassNotFoundException {
+        String sql = "UPDATE tblFish SET fishQuantity = ? WHERE fishID = ?";
+        try (Connection conn = DButils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, newQuantity);
+            ps.setInt(2, fishId);
+            int rowsUpdated = ps.executeUpdate();
+            LOGGER.log(Level.INFO, "Updated quantity for fish " + fishId + ": new quantity=" + newQuantity + ", rows updated=" + rowsUpdated);
+            return rowsUpdated > 0;
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error updating quantity for fish " + fishId + ": " + e.getMessage(), e);
+            return false;
+        }
+    }
 }

@@ -95,8 +95,8 @@ public class EmailUtils {
             productListHtml.append("<tr>")
                     .append("<td style=\"padding: 8px; border-bottom: 1px solid #ddd;\">" + fishName + "</td>")
                     .append("<td style=\"padding: 8px; border-bottom: 1px solid #ddd; text-align: center;\">" + detail.getQuantity() + "</td>")
-                    .append("<td style=\"padding: 8px; border-bottom: 1px solid #ddd; text-align: right;\">$" + String.format("%.2f", detail.getPrice()) + "</td>")
-                    .append("<td style=\"padding: 8px; border-bottom: 1px solid #ddd; text-align: right;\">$" + String.format("%.2f", detail.getPrice() * detail.getQuantity()) + "</td>")
+                    .append("<td style=\"padding: 8px; border-bottom: 1px solid #ddd; text-align: right;\">" + String.format("%.2f", detail.getPrice())  + " VND."  + "</td>")
+                    .append("<td style=\"padding: 8px; border-bottom: 1px solid #ddd; text-align: right;\">" + String.format("%.2f", detail.getPrice() * detail.getQuantity()) + " VND."  + "</td>")
                     .append("</tr>");
         }
 
@@ -196,7 +196,7 @@ public class EmailUtils {
                 +                    productListHtml.toString() + "\n"
                 + "                </tbody>\n"
                 + "            </table>\n"
-                + "            <p class=\"total\">Total Amount: $" + String.format("%.2f", order.getTotalPrice()) + "</p>\n"
+                + "            <p class=\"total\">Total Amount:" + String.format("%.2f", order.getTotalPrice()) + " VND." + "</p>\n"
                 + "            <h3>Payment Information</h3>\n"
                 + "            <p><strong>Payment Method:</strong> " + (order.getPaymentMethod() != null ? order.getPaymentMethod() : "N/A") + "</p>\n"
                 + "            <p><strong>Payment Date:</strong> " + order.getCreatedAt() + "</p>\n"

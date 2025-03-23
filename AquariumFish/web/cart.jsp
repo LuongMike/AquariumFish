@@ -79,6 +79,14 @@
                 background-color: #e60000;
             }
 
+            .total-price {
+                text-align: right;
+                font-size: 16px;
+                font-weight: bold;
+                color: #2c3e50;
+                margin-bottom: 20px;
+            }
+
             .checkout-form {
                 text-align: center;
                 margin-bottom: 20px;
@@ -159,22 +167,28 @@
                 if (order != null) {
                     List<OrderDetailDTO> details = oddao.getOrderDetailsByOrderId(order.getOrderID());
                     if (details != null && !details.isEmpty()) {
+                        double totalCartPrice = 0.0;
             %>
             <table class="cart-table">
                 <thead>
                     <tr>
                         <th>ID Sản Phẩm</th>
                         <th>Số Lượng</th>
-                        <th>Giá</th>
+                        <th>Giá Đơn Vị</th>
+                        <th>Tổng Giá</th>
                         <th>Hành Động</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <% for (OrderDetailDTO detail : details) {%>
+                    <% for (OrderDetailDTO detail : details) {
+                        double totalPrice = detail.getQuantity() * detail.getPrice();
+                        totalCartPrice += totalPrice;
+                    %>
                     <tr>
                         <td><%= detail.getFishID()%></td>
                         <td><%= detail.getQuantity()%></td>
                         <td><%= String.format("%,.0f", detail.getPrice())%> VND</td>
+                        <td><%= String.format("%,.0f", totalPrice)%> VND</td>
                         <td>
                             <form action="CartController" method="post">
                                 <input type="hidden" name="orderDetailId" value="<%= detail.getOrderDetailID()%>">
@@ -186,6 +200,7 @@
                     <% }%>
                 </tbody>
             </table>
+            <p class="total-price">Tổng cộng: <%= String.format("%,.0f", totalCartPrice)%> VND</p>
             <form action="CartController" method="post" class="checkout-form">
                 <input type="hidden" name="orderId" value="<%= order.getOrderID()%>">
                 <input type="hidden" name="action" value="checkout">
@@ -206,7 +221,6 @@
             %>
             <div class="links">
                 <a href="product.jsp" class="link-btn">Tiếp Tục Mua Sắm</a> <br/>
-
                 <a href="index.jsp" class="link-btn">Quay lại</a>
             </div>
         </div>

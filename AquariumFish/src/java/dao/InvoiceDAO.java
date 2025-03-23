@@ -113,7 +113,9 @@ public class InvoiceDAO {
                             rs.getDouble("total_price"),
                             rs.getDouble("tax"),
                             rs.getDouble("final_price"),
-                            rs.getTimestamp("issued_at")
+                            rs.getTimestamp("issued_at"),
+                            rs.getInt("discountID"),
+                            rs.getDouble("discount_amount")
                     );
                 }
             }

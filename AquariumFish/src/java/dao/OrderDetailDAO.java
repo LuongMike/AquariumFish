@@ -13,6 +13,68 @@ import utils.DButils;
 
 public class OrderDetailDAO {
 
+    
+    // Cập nhật số lượng của OrderDetail
+    public boolean updateOrderDetailQuantity(int orderDetailId, int quantity) throws ClassNotFoundException {
+        String sql = "UPDATE [tblOrder_Details] SET quantity = ? WHERE orderDetailID = ?";
+        try (Connection conn = DButils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, quantity);
+            ps.setInt(2, orderDetailId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error updating order detail quantity for ID " + orderDetailId + ": " + e.getMessage(), e);
+            return false;
+        }
+    }
+    
+    // Lấy OrderDetailDTO theo orderId và fishId
+    public OrderDetailDTO getOrderDetailByOrderIdAndFishId(int orderId, int fishId) throws ClassNotFoundException {
+        String sql = "SELECT orderDetailID, orderID, fishID, quantity, price FROM [tblOrder_Details] WHERE orderID = ? AND fishID = ?";
+        try (Connection conn = DButils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            ps.setInt(2, fishId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new OrderDetailDTO(
+                            rs.getInt("orderDetailID"),
+                            rs.getInt("orderID"),
+                            rs.getInt("fishID"),
+                            rs.getInt("quantity"),
+                            rs.getDouble("price")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error retrieving order detail for order " + orderId + " and fish " + fishId + ": " + e.getMessage(), e);
+        }
+        return null;
+    }
+    
+    // Lấy OrderDetailDTO theo orderDetailId
+    public OrderDetailDTO getOrderDetailById(int orderDetailId) throws ClassNotFoundException {
+        String sql = "SELECT orderDetailID, orderID, fishID, quantity, price FROM [tblOrder_Details] WHERE orderDetailID = ?";
+        try (Connection conn = DButils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderDetailId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new OrderDetailDTO(
+                            rs.getInt("orderDetailID"),
+                            rs.getInt("orderID"),
+                            rs.getInt("fishID"),
+                            rs.getInt("quantity"),
+                            rs.getDouble("price")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error retrieving order detail with ID " + orderDetailId + ": " + e.getMessage(), e);
+        }
+        return null;
+    }
+    
     //thêm chi tiết đặt hàng
     public boolean addOrderDetail(int orderId, int fishId, int quantity, double price) {
         String sql = "INSERT INTO tblOrder_Details (orderID, fishID, quantity, price) VALUES (?, ?, ?, ?)";

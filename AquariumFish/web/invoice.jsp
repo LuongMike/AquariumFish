@@ -126,6 +126,7 @@
             String message = (String) session.getAttribute("message");
             String discountMessage = (String) session.getAttribute("discountMessage");
             String appliedDiscountCode = (String) session.getAttribute("appliedDiscountCode");
+            Double discountAmountFromSession = (Double) session.getAttribute("discountAmount"); // Lấy discountAmount từ session để kiểm tra
             Integer invoiceId = (Integer) session.getAttribute("invoiceId");
             InvoiceDAO idao = new InvoiceDAO();
             DiscountDAO ddao = new DiscountDAO();
@@ -166,13 +167,24 @@
                     DiscountDTO discount = ddao.getDiscountById(invoice.getDiscountID());
                     if (discount != null) {
                         displayDiscountCode = discount.getCode();
+                    } else {
+                        displayDiscountCode = "Unknown";
                     }
                 }
-                if (displayDiscountCode != null && !displayDiscountCode.isEmpty()) {
+                // Hiển thị "Mã Giảm Giá" và "Số Tiền Giảm" nếu discount_amount > 0
+                if (invoice.getDiscount_amount() > 0) {
+            %>
+            <tr><th>Mã Giảm Giá</th><td><%= displayDiscountCode != null ? displayDiscountCode : "Unknown" %></td></tr>
+            <tr><th>Số Tiền Giảm</th><td><%= String.format("%,.0f", invoice.getDiscount_amount()) %> VND</td></tr>
+            <%
+                } else if (displayDiscountCode != null && !displayDiscountCode.isEmpty()) {
+                    // Nếu có mã giảm giá nhưng discount_amount = 0, hiển thị thông báo
             %>
             <tr><th>Mã Giảm Giá</th><td><%= displayDiscountCode %></td></tr>
-            <tr><th>Số Tiền Giảm</th><td><%= String.format("%,.0f", invoice.getDiscount_amount()) %> VND</td></tr>
-            <% } %>
+            <tr><th>Số Tiền Giảm</th><td>0 VND (Mã giảm giá không áp dụng được)</td></tr>
+            <%
+                }
+            %>
             <tr><th>Giá Cuối Cùng</th><td><%= String.format("%,.0f", invoice.getFinalPrice()) %> VND</td></tr>
             <tr><th>Ngày Phát Hành</th><td><%= invoice.getIssuedAt() %></td></tr>
         </table>
