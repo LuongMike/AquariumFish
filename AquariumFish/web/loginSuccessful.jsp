@@ -17,7 +17,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="refresh" content="3;url=mainPage.jsp"> <!-- Tự động chuyển về trang chính -->
+        <meta http-equiv="refresh" content="3;url=index.jsp"> <!-- Tự động chuyển về trang chính -->
 
         <title>Đăng Nhập Thành Công</title>
         <style>

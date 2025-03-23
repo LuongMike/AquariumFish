@@ -12,74 +12,112 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Đăng Nhập</title>
         <style>
+            /* Reset mặc định */
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: 'Arial', sans-serif;
+            }
+
             body {
-                font-family: 'Poppins', sans-serif;
-                background: linear-gradient(135deg, #00c6ff, #0072ff); /* Gradient xanh biển tươi sáng */
+                background-color: #f0f4f8; /* Màu nền nhẹ nhàng */
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                height: 100vh;
-                margin: 0;
+                min-height: 100vh; /* Đảm bảo chiều cao tối thiểu bằng chiều cao màn hình */
             }
+
             .container {
-                background: white;
+                background-color: #ffffff; /* Màu nền trắng cho container */
                 padding: 40px;
-                border-radius: 15px;
-                text-align: center;
-                box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
-                width: 350px;
-                animation: fadeIn 1s ease-in-out;
-                margin-top: auto;
-            }
-            .container h2 {
-                color: #0072ff;
-                margin-bottom: 20px;
-                font-size: 26px;
-            }
-            .input-box {
+                border-radius: 15px; /* Bo góc */
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Đổ bóng nhẹ */
                 width: 100%;
-                margin: 10px 0;
+                max-width: 400px; /* Chiều rộng tối đa */
+                text-align: center;
+                margin: 60px 0px;
             }
+
+            h2 {
+                color: #0077cc; /* Màu xanh dương cho tiêu đề */
+                font-size: 28px;
+                margin-bottom: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px; /* Khoảng cách giữa icon và text */
+            }
+
+            .input-box {
+                margin-bottom: 20px;
+                position: relative;
+            }
+
             .input-box input {
-                width: 92%;
-                padding: 12px;
-                border: 2px solid #00c6ff;
+                width: 100%;
+                padding: 12px 15px;
+                border: 2px solid #ddd; /* Viền xám nhạt */
                 border-radius: 8px;
-                outline: none;
                 font-size: 16px;
-                background: rgba(0, 198, 255, 0.1);
+                outline: none;
+                transition: border-color 0.3s ease; /* Hiệu ứng chuyển màu viền */
             }
+
+            .input-box input:focus {
+                border-color: #0077cc; /* Viền xanh khi focus */
+                box-shadow: 0 0 5px rgba(0, 119, 204, 0.2); /* Đổ bóng nhẹ khi focus */
+            }
+
+            .input-box input::placeholder {
+                color: #999; /* Màu chữ placeholder */
+            }
+
             .btn {
                 width: 100%;
                 padding: 12px;
-                background: #ffb400;
-                color: white;
+                background-color: #0077cc; /* Màu xanh dương cho nút */
+                color: #ffffff;
                 border: none;
                 border-radius: 8px;
-                font-size: 18px;
+                font-size: 16px;
+                font-weight: bold;
                 cursor: pointer;
-                transition: 0.3s;
-                font-weight: bold;
-            }
-            .btn:hover {
-                background: #ff8c00;
-                transform: scale(1.05);
-            }
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(-10px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            .error-message {
-                color: #d32f2f;
-                background: #ffebee;
-                border-left: 5px solid #d32f2f;
-                padding: 10px;
-                margin-top: 15px;
-                font-weight: bold;
-                border-radius: 5px;
-                animation: fadeIn 0.5s ease-in-out;
+                transition: background-color 0.3s ease, transform 0.1s ease; /* Hiệu ứng chuyển màu và nhấn */
             }
 
+            .btn:hover {
+                background-color: #005fa3; /* Màu xanh đậm hơn khi hover */
+            }
+
+            .btn:active {
+                transform: scale(0.98); /* Hiệu ứng nhấn nút */
+            }
+
+            .error-message {
+                color: #e74c3c; /* Màu đỏ cho thông báo lỗi */
+                background-color: #fceae8; /* Màu nền nhạt */
+                padding: 10px;
+                border-radius: 5px;
+                margin: 15px 0;
+                font-size: 14px;
+            }
+
+            .register-link {
+                margin-top: 20px;
+                font-size: 14px;
+                color: #666;
+            }
+
+            .register-link a {
+                color: #0077cc; /* Màu xanh cho liên kết */
+                text-decoration: none;
+                font-weight: bold;
+            }
+
+            .register-link a:hover {
+                text-decoration: underline; /* Gạch chân khi hover */
+            }
         </style>
     </head>
     <body>

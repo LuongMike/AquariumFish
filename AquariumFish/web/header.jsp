@@ -194,7 +194,7 @@
                 <div class="search-bar">
                     <form action="FishController" method="get">
                         <input type="hidden" name="action" value="viewProducts">
-                        <input type="text" name="searchTerm" placeholder="Search fish type..." required>
+                        <input type="text" name="searchTerm" placeholder="Search by type, name..." required>
                         <input type="submit" value="Search"/>
                     </form>
                 </div>

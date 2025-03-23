@@ -1,3 +1,4 @@
+<%@page import="utils.AuthenUtils"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page import="dto.CategoryDTO"%>
 <%@page import="java.util.List"%>
@@ -174,11 +175,27 @@
             .back-link:hover {
                 background-color: #005fa3;
             }
+            .error-container {
+                text-align: center;
+                padding: 20px;
+            }
+
+            .error-container h1 {
+                color: #ff4d4d;
+                margin-bottom: 10px;
+            }
+
+            .error-container p {
+                color: #666;
+                font-size: 16px;
+                margin-bottom: 20px;
+            }
         </style>
     </head>
     <body>
         <jsp:include page="header.jsp" />
         <div class="container">
+            <% if (AuthenUtils.isAdmin(session)) { %>
             <h1>Thêm Cá Mới</h1>
             <% String message = (String) request.getAttribute("message"); %>
             <% if (message != null) {%>
@@ -257,6 +274,13 @@
                 </div>
             </form>
             <a href="index.jsp" class="back-link">Quay lại</a>
+            <% } else { %>
+            <div class="form-container error-container">
+                <h1>403 Error</h1>
+                <p>You do not have permission to access this content!</p>
+                <a href="login.jsp" class="back-link">Back to Login</a>
+            </div>
+            <% }%>
         </div>
         <jsp:include page="footer.jsp" />
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

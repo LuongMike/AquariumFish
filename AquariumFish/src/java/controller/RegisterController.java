@@ -1,68 +1,171 @@
 package controller;
 
 import dao.UserDAO;
+import dto.UserDTO;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import utils.EmailUtils;
+import utils.PasswordUtils;
 
 @WebServlet("/RegisterController")
 public class RegisterController extends HttpServlet {
 
-    private static final String REGISTER_PAGE = "/register.jsp";
-    private UserDAO udao = new UserDAO();
+    private static final Logger LOGGER = Logger.getLogger(RegisterController.class.getName());
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        String url = REGISTER_PAGE;
+
+        String action = request.getParameter("action");
 
         try {
+            if ("register".equals(action)) {
+                registerUser(request, response);
+                return; // Dừng xử lý sau redirect
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error at RegisterController: {0}", e.toString());
+            request.getSession().setAttribute("registerMessage", "Đã xảy ra lỗi: " + e.getMessage());
+            response.sendRedirect("register.jsp");
+        }
+    }
+
+    private void registerUser(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            // Lấy thông tin từ form
             String userName = request.getParameter("userName");
             String account = request.getParameter("account");
-            String password = request.getParameter("password");
             String email = request.getParameter("email");
+            String password = request.getParameter("password");
+            String confirmPassword = request.getParameter("confirmpassword");
             String phone = request.getParameter("phone");
             String address = request.getParameter("address");
 
-            // Lưu dữ liệu đã nhập để hiển thị lại nếu có lỗi
-            request.setAttribute("userName", userName);
-            request.setAttribute("account", account);
-            request.setAttribute("email", email);
-            request.setAttribute("phone", phone);
-            request.setAttribute("address", address);
+            // Khởi tạo biến kiểm tra lỗi
+            boolean hasError = false;
 
-            // Kiểm tra dữ liệu đầu vào
-            if (userName == null || userName.trim().isEmpty() ||
-                account == null || account.trim().isEmpty() ||
-                password == null || password.trim().isEmpty() ||
-                email == null || email.trim().isEmpty()) {
-                request.setAttribute("registerMessage", "Vui lòng điền đầy đủ các trường bắt buộc!");
+            // Validate userName
+            if (userName == null || userName.trim().length() < 3) {
+                request.setAttribute("userName_error", "Tên người dùng phải có ít nhất 3 ký tự");
+                hasError = true;
+            }
+
+            // Validate account
+            if (account == null || account.trim().length() < 3) {
+                request.setAttribute("account_error", "Tài khoản phải có ít nhất 3 ký tự");
+                hasError = true;
+            }
+
+            // Validate email
+            if (email == null || !isValidEmail(email)) {
+                request.setAttribute("email_error", "Vui lòng nhập email hợp lệ");
+                hasError = true;
+            }
+
+            // Validate password
+            if (password == null || password.length() < 6) {
+                request.setAttribute("password_error", "Mật khẩu phải có ít nhất 6 ký tự");
+                hasError = true;
+            }
+
+            // Validate confirmPassword
+            if (!password.equals(confirmPassword)) {
+                request.setAttribute("confirmpassword_error", "Mật khẩu xác nhận không khớp");
+                hasError = true;
+            }
+
+            // Validate phone (nếu có)
+            if (phone != null && !phone.trim().isEmpty() && !phone.matches("\\d{10,11}")) {
+                request.setAttribute("phone_error", "Số điện thoại phải có 10-11 chữ số");
+                hasError = true;
+            }
+
+            // Nếu có lỗi, lưu lại các giá trị đã nhập và quay lại trang đăng ký
+            if (hasError) {
+                request.setAttribute("userName", userName);
+                request.setAttribute("account", account);
+                request.setAttribute("email", email);
+                request.setAttribute("phone", phone);
+                request.setAttribute("address", address);
+                request.getRequestDispatcher("register.jsp").forward(request, response);
                 return;
             }
 
-            // Kiểm tra xem account hoặc email đã tồn tại chưa
-            if (udao.isAccountOrEmailExists(account, email)) {
-                request.setAttribute("registerMessage", "Tài khoản hoặc email đã tồn tại!");
+            // Kiểm tra xem tài khoản đã tồn tại chưa
+            UserDAO userDAO = new UserDAO();
+            UserDTO existingUser = userDAO.readbyAccount(account);
+            if (existingUser != null) {
+                request.setAttribute("account_error", "Tài khoản đã tồn tại. Vui lòng chọn tài khoản khác.");
+                request.setAttribute("userName", userName);
+                request.setAttribute("email", email);
+                request.setAttribute("phone", phone);
+                request.setAttribute("address", address);
+                request.getRequestDispatcher("register.jsp").forward(request, response);
                 return;
             }
 
-            // Đăng ký người dùng mới
-            boolean registered = udao.registerUser(userName, account, password, email, phone, address);
-            if (registered) {
-                request.setAttribute("registerMessage", "Đăng ký thành công! Vui lòng đăng nhập.");
-                url = REGISTER_PAGE; // Chuyển hướng về login.jsp sau khi đăng ký thành công
+            // Kiểm tra xem email đã tồn tại chưa
+            UserDTO existingEmail = userDAO.findByEmail(email);
+            if (existingEmail != null) {
+                request.setAttribute("email_error", "Email đã được sử dụng. Vui lòng dùng email khác.");
+                request.setAttribute("userName", userName);
+                request.setAttribute("account", account);
+                request.setAttribute("phone", phone);
+                request.setAttribute("address", address);
+                request.getRequestDispatcher("register.jsp").forward(request, response);
+                return;
+            }
+
+            // Tạo người dùng mới
+            UserDTO newUser = new UserDTO();
+            newUser.setUserName(userName);
+            newUser.setAccount(account);
+            newUser.setEmail(email);
+            newUser.setPassword(PasswordUtils.hashPassword(password)); // Mã hóa mật khẩu
+            newUser.setPhone(phone);
+            newUser.setAddress(address);
+            newUser.setRole("customer"); // Mặc định là role USER
+            newUser.setBalance(0.0); // Số dư mặc định là 0
+
+            // Lưu người dùng vào database
+            boolean result = userDAO.create(newUser);
+
+            if (result) {
+                // Đăng ký thành công, gửi email chúc mừng
+                boolean emailSent = EmailUtils.sendRegistrationEmail(email, userName, account);
+                if (emailSent) {
+                    LOGGER.log(Level.INFO, "Congratulations email sent to {0}", email);
+                    request.getSession().setAttribute("registerMessage", "Đăng ký thành công! Email chào mừng đã được gửi đến bạn. Bạn có thể đăng nhập ngay.");
+                } else {
+                    LOGGER.log(Level.WARNING, "Failed to send congratulations email to {0}", email);
+                    request.getSession().setAttribute("registerMessage", "Đăng ký thành công! Bạn có thể đăng nhập ngay. (Lưu ý: Không thể gửi email chào mừng)");
+                }
             } else {
-                request.setAttribute("registerMessage", "Đăng ký thất bại! Vui lòng thử lại.");
+                request.getSession().setAttribute("registerMessage", "Đăng ký thất bại. Vui lòng thử lại.");
             }
+
+            // Redirect để áp dụng PRG pattern
+            response.sendRedirect("register.jsp");
+
         } catch (Exception e) {
-            request.setAttribute("registerMessage", "Lỗi khi đăng ký: " + e.getMessage());
-            log("Error at RegisterController: " + e.toString());
-        } finally {
-            request.getRequestDispatcher(url).forward(request, response);
+            LOGGER.log(Level.SEVERE, "Error at registerUser: {0}", e.toString());
+            request.getSession().setAttribute("registerMessage", "Đã xảy ra lỗi khi đăng ký: " + e.getMessage());
+            response.sendRedirect("register.jsp");
         }
+    }
+
+    private boolean isValidEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return false;
+        }
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+        return email.matches(emailRegex);
     }
 
     @Override

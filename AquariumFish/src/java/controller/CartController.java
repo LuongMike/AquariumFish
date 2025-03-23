@@ -21,67 +21,70 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import utils.EmailUtils;
 
 @WebServlet("/CartController")
 public class CartController extends HttpServlet {
 
-    private static final String INVOICE_PAGE = "/invoice.jsp";
-    private static final String CART_PAGE = "/cart.jsp";
-    private static final String CHECKOUT_PAGE = "/checkout.jsp";
+    private static final String INVOICE_PAGE = "invoice.jsp";
+    private static final String CART_PAGE = "cart.jsp";
+    private static final String CHECKOUT_PAGE = "checkout.jsp";
     private UserDAO udao = new UserDAO();
     private FishDAO fdao = new FishDAO();
     private OrderDAO odao = new OrderDAO();
     private OrderDetailDAO oddao = new OrderDetailDAO();
     private InvoiceDAO idao = new InvoiceDAO();
-    private PaymentDAO pdao = new PaymentDAO(); // Thêm PaymentDAO
+    private PaymentDAO pdao = new PaymentDAO();
     private DiscountDAO ddao = new DiscountDAO();
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
-        String url = CART_PAGE;
 
         HttpSession session = request.getSession();
-        Integer userId = (Integer) session.getAttribute("userId"); // Giả định userId lưu trong session khi đăng nhập
+        Integer userId = (Integer) session.getAttribute("userId");
 
         if (userId == null) {
-            request.setAttribute("message", "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
-            url = "/login.jsp"; // Chuyển hướng đến trang đăng nhập nếu chưa đăng nhập
-        } else if (action != null) {
+            // Redirect đến trang đăng nhập nếu chưa đăng nhập
+            response.sendRedirect("login.jsp");
+            return;
+        }
+
+        if (action != null) {
             switch (action) {
                 case "add":
-                    url = processAddToCart(request, response, userId);
-                    break;
+                    processAddToCart(request, response, userId);
+                    return; // Dừng xử lý sau redirect
                 case "buyNow":
-                    url = processBuyNow(request, response, userId);
-                    break;
+                    processBuyNow(request, response, userId);
+                    return;
                 case "remove":
-                    url = processRemoveFromCart(request, response, userId);
-                    break;
+                    processRemoveFromCart(request, response, userId);
+                    return;
                 case "checkout":
-                    url = processCheckout(request, response, userId);
-                    break;
+                    processCheckout(request, response, userId);
+                    return;
                 case "applyDiscount":
-                    url = applyDiscount(request, response, userId);
-                    break;
+                    applyDiscount(request, response, userId);
+                    return;
                 case "pay":
-                    url = processPayment(request, response, userId);
-                    break;
+                    processPayment(request, response, userId);
+                    return;
                 default:
-                    request.setAttribute("message", "Hành động không hợp lệ!");
+                    request.setAttribute("message", "Invalid action!");
                     break;
             }
         } else {
-            request.setAttribute("message", "Không có hành động được chỉ định!");
+            request.setAttribute("message", "No action specified!");
         }
 
-        getServletContext().getRequestDispatcher(url).forward(request, response);
+        // Forward nếu không có redirect
+        getServletContext().getRequestDispatcher(CART_PAGE).forward(request, response);
     }
 
-    private String processAddToCart(HttpServletRequest request, HttpServletResponse response, int userId)
+    private void processAddToCart(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
         String fishId = request.getParameter("fishId");
-        String url = CART_PAGE;
 
         try {
             FishDTO fish = fdao.readbyID(fishId);
@@ -102,28 +105,29 @@ public class CartController extends HttpServlet {
                         // Cập nhật tổng giá
                         double totalPrice = calculateTotalPrice(orderId);
                         odao.updateTotalPrice(orderId, totalPrice);
-                        request.setAttribute("message", "Đã thêm " + fish.getFishName() + " vào giỏ hàng!");
+                        // Lưu thông báo vào session để hiển thị sau khi redirect
+                        request.getSession().setAttribute("message", "Added " + fish.getFishName() + " to cart!");
                     } else {
-                        request.setAttribute("message", "Không thể thêm sản phẩm vào giỏ hàng!");
+                        request.getSession().setAttribute("message", "Failed to add item to cart!");
                     }
                 } else {
-                    request.setAttribute("message", "Không thể tạo đơn hàng!");
+                    request.getSession().setAttribute("message", "Failed to create order!");
                 }
             } else {
-                request.setAttribute("message", "Không tìm thấy cá với ID: " + fishId);
+                request.getSession().setAttribute("message", "Fish not found with ID: " + fishId);
             }
         } catch (Exception e) {
-            request.setAttribute("message", "Lỗi khi thêm vào giỏ hàng: " + e.getMessage());
+            request.getSession().setAttribute("message", "Error adding to cart: " + e.getMessage());
             log("Error at processAddToCart: " + e.toString());
         }
 
-        return url;
+        // Redirect đến trang giỏ hàng
+        response.sendRedirect(CART_PAGE);
     }
 
-    private String processBuyNow(HttpServletRequest request, HttpServletResponse response, int userId)
+    private void processBuyNow(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
         String fishId = request.getParameter("fishId");
-        String url = INVOICE_PAGE;
 
         try {
             FishDTO fish = fdao.readbyID(fishId);
@@ -143,65 +147,59 @@ public class CartController extends HttpServlet {
                         odao.updateTotalPrice(orderId, totalPrice);
                         int invoiceId = idao.createInvoice(orderId, totalPrice);
                         if (invoiceId != -1) {
-                            // Không cập nhật status thành 'completed' ở đây
-                            InvoiceDTO invoice = idao.getInvoiceByOrderId(orderId);
-                            request.setAttribute("invoice", invoice);
-                            request.setAttribute("message", "Hóa đơn đã được tạo thành công! Vui lòng thanh toán.");
+                            // Lưu thông tin hóa đơn vào session để hiển thị sau khi redirect
+                            request.getSession().setAttribute("invoiceId", invoiceId);
+                            request.getSession().setAttribute("message", "Invoice created successfully! Please proceed to payment.");
                         } else {
-                            request.setAttribute("message", "Không thể tạo hóa đơn!");
-                            url = CART_PAGE;
+                            request.getSession().setAttribute("message", "Failed to create invoice!");
                         }
                     } else {
-                        request.setAttribute("message", "Không thể thêm sản phẩm để thanh toán!");
-                        url = CART_PAGE;
+                        request.getSession().setAttribute("message", "Failed to add item for payment!");
                     }
                 } else {
-                    request.setAttribute("message", "Không thể tạo đơn hàng!");
-                    url = CART_PAGE;
+                    request.getSession().setAttribute("message", "Failed to create order!");
                 }
             } else {
-                request.setAttribute("message", "Không tìm thấy cá với ID: " + fishId);
-                url = CART_PAGE;
+                request.getSession().setAttribute("message", "Fish not found with ID: " + fishId);
             }
         } catch (Exception e) {
-            request.setAttribute("message", "Lỗi khi xử lý mua ngay: " + e.getMessage());
+            request.getSession().setAttribute("message", "Error processing buy now: " + e.getMessage());
             log("Error at processBuyNow: " + e.toString());
-            url = CART_PAGE;
         }
 
-        return url;
+        // Redirect đến trang hóa đơn
+        response.sendRedirect(INVOICE_PAGE);
     }
 
-    private String processRemoveFromCart(HttpServletRequest request, HttpServletResponse response, int userId)
+    private void processRemoveFromCart(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
         String orderDetailIdStr = request.getParameter("orderDetailId");
-        String url = CART_PAGE;
 
         try {
             int orderDetailId = Integer.parseInt(orderDetailIdStr);
             if (oddao.removeOrderDetail(orderDetailId)) {
-                request.setAttribute("message", "Đã xóa sản phẩm khỏi giỏ hàng!");
+                request.getSession().setAttribute("message", "Item removed from cart!");
                 log("Removed order detail " + orderDetailId + " for user " + userId);
             } else {
-                request.setAttribute("message", "Không thể xóa sản phẩm!");
+                request.getSession().setAttribute("message", "Failed to remove item!");
                 log("Failed to remove order detail " + orderDetailId);
             }
         } catch (NumberFormatException e) {
-            request.setAttribute("message", "ID chi tiết đơn hàng không hợp lệ!");
+            request.getSession().setAttribute("message", "Invalid order detail ID!");
             log("Error at processRemoveFromCart - NumberFormatException: " + e.toString());
         } catch (Exception e) {
-            request.setAttribute("message", "Lỗi khi xóa sản phẩm: " + e.getMessage());
+            request.getSession().setAttribute("message", "Error removing item: " + e.getMessage());
             log("Error at processRemoveFromCart: " + e.toString());
         }
 
-        return url;
+        // Redirect đến trang giỏ hàng
+        response.sendRedirect(CART_PAGE);
     }
 
-    private String processCheckout(HttpServletRequest request, HttpServletResponse response, int userId)
+    private void processCheckout(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
         String orderIdStr = request.getParameter("orderId");
-        String url = INVOICE_PAGE;
-        PaymentDAO pdao = new PaymentDAO(); // Thêm PaymentDAO để kiểm tra
+        PaymentDAO pdao = new PaymentDAO();
 
         try {
             int orderId = Integer.parseInt(orderIdStr);
@@ -218,35 +216,30 @@ public class CartController extends HttpServlet {
                 double totalPrice = calculateTotalPrice(orderId);
                 int invoiceId = idao.createInvoice(orderId, totalPrice);
                 if (invoiceId != -1) {
-                    InvoiceDTO invoice = idao.getInvoiceByOrderId(orderId);
-                    request.setAttribute("invoice", invoice);
-                    request.setAttribute("message", "Hóa đơn đã được tạo thành công! Vui lòng thanh toán.");
+                    request.getSession().setAttribute("invoiceId", invoiceId);
+                    request.getSession().setAttribute("message", "Invoice created successfully! Please proceed to payment.");
                 } else {
-                    request.setAttribute("message", "Không thể tạo hóa đơn!");
-                    url = CART_PAGE;
+                    request.getSession().setAttribute("message", "Failed to create invoice!");
                 }
             } else {
-                request.setAttribute("message", "Không tìm thấy đơn hàng hợp lệ!");
-                url = CART_PAGE;
+                request.getSession().setAttribute("message", "No valid order found!");
             }
         } catch (NumberFormatException e) {
-            request.setAttribute("message", "ID đơn hàng không hợp lệ!");
+            request.getSession().setAttribute("message", "Invalid order ID!");
             log("Error at processCheckout - NumberFormatException: " + e.toString());
-            url = CART_PAGE;
         } catch (Exception e) {
-            request.setAttribute("message", "Lỗi khi tạo hóa đơn: " + e.getMessage());
+            request.getSession().setAttribute("message", "Error creating invoice: " + e.getMessage());
             log("Error at processCheckout: " + e.toString());
-            url = CART_PAGE;
         }
 
-        return url;
+        // Redirect đến trang hóa đơn
+        response.sendRedirect(INVOICE_PAGE);
     }
 
-    private String applyDiscount(HttpServletRequest request, HttpServletResponse response, int userId)
+    private void applyDiscount(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
         String invoiceIdStr = request.getParameter("invoiceId");
         String discountCode = request.getParameter("discountCode");
-        String url = INVOICE_PAGE;
 
         try {
             int invoiceId = Integer.parseInt(invoiceIdStr);
@@ -277,110 +270,183 @@ public class CartController extends HttpServlet {
                             discountID = discount.getDiscoutID();
                             System.out.println("Applying discount: invoiceId=" + invoiceId + ", discountID=" + discountID + ", discountAmount=" + discountAmount + ", finalPrice=" + finalPrice);
                             if (idao.updateDiscount(invoiceId, discountID, discountAmount, finalPrice)) {
-                                invoice.setDiscountID(discountID);
-                                invoice.setDiscount_amount(discountAmount);
-                                invoice.setFinalPrice(finalPrice);
-                                request.setAttribute("discountMessage", "Áp dụng mã giảm giá thành công! Giảm: " + discountAmount + " VND");
-                                request.setAttribute("appliedDiscountCode", discountCode);
+                                request.getSession().setAttribute("discountMessage", "Discount applied successfully! Discount: " + discountAmount + " VND");
+                                request.getSession().setAttribute("appliedDiscountCode", discountCode);
                             } else {
-                                request.setAttribute("discountMessage", "Lỗi khi áp dụng mã giảm giá!");
+                                request.getSession().setAttribute("discountMessage", "Error applying discount!");
                                 System.out.println("Failed to apply discount for invoiceId=" + invoiceId);
                             }
                         } else {
-                            request.setAttribute("discountMessage", "Mã giảm giá đã hết hạn hoặc không hợp lệ!");
+                            request.getSession().setAttribute("discountMessage", "Discount code has expired or is invalid!");
                         }
                     } else {
-                        request.setAttribute("discountMessage", "Mã giảm giá không tồn tại!");
+                        request.getSession().setAttribute("discountMessage", "Discount code does not exist!");
                     }
                 }
-                request.setAttribute("invoice", invoice);
+                request.getSession().setAttribute("invoiceId", invoiceId);
             } else {
-                request.setAttribute("message", "Không tìm thấy thông tin hóa đơn!");
+                request.getSession().setAttribute("message", "Invoice information not found!");
                 log("Invoice not found for invoiceId: " + invoiceId);
             }
         } catch (NumberFormatException e) {
-            request.setAttribute("message", "ID hóa đơn không hợp lệ!");
+            request.getSession().setAttribute("message", "Invalid invoice ID!");
             log("Error at applyDiscount - NumberFormatException: " + e.toString());
         } catch (Exception e) {
-            request.setAttribute("message", "Lỗi khi áp dụng mã giảm giá: " + e.getMessage());
+            request.getSession().setAttribute("message", "Error applying discount: " + e.getMessage());
             log("Error at applyDiscount: " + e.toString());
         }
 
-        return url;
+        // Redirect đến trang hóa đơn
+        response.sendRedirect(INVOICE_PAGE);
     }
 
-    private String processPayment(HttpServletRequest request, HttpServletResponse response, int userId)
+    private void processPayment(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
         String invoiceIdStr = request.getParameter("invoiceId");
-        String url = INVOICE_PAGE;
+        boolean isPaymentSuccessful = false; // Theo dõi trạng thái thanh toán
 
         try {
             int invoiceId = Integer.parseInt(invoiceIdStr);
             InvoiceDTO invoice = idao.getInvoiceById(invoiceId);
-            if (invoice != null) {
-                if (pdao.isInvoicePaid(invoiceId)) {
-                    request.setAttribute("message", "Hóa đơn này đã được thanh toán!");
-                    request.setAttribute("invoice", invoice);
-                    log("Invoice " + invoiceId + " already paid");
-                    return url;
-                }
-
-                UserDTO user = udao.getUserById(userId);
-                if (user != null) {
-                    double balance = user.getBalance();
-                    System.out.println("Balance of user " + userId + ": " + balance);
-                    double finalPrice = invoice.getFinalPrice();
-
-                    if (balance >= finalPrice) {
-                        double newBalance = balance - finalPrice;
-                        if (udao.updateBalance(userId, newBalance)) {
-                            if (pdao.createPayment(invoiceId, finalPrice)) {
-                                int orderId = invoice.getOrderID();
-                                if (odao.updateOrderStatus(orderId, "completed")) {
-                                    user.setBalance(newBalance);
-                                    request.getSession().setAttribute("user", user);
-                                    request.setAttribute("message", "Thanh toán thành công!");
-                                    log("Payment successful for invoice " + invoiceId + ", order " + orderId + " completed, new balance: " + newBalance);
-                                } else {
-                                    udao.updateBalance(userId, balance);
-                                    pdao.deletePayment(invoiceId);
-                                    request.setAttribute("message", "Lỗi khi cập nhật trạng thái đơn hàng!");
-                                    log("Failed to update order status for order " + orderId);
-                                }
-                            } else {
-                                udao.updateBalance(userId, balance);
-                                request.setAttribute("message", "Lỗi khi ghi nhận thanh toán!");
-                                log("Failed to create payment record for invoice " + invoiceId + ", balance restored");
-                            }
-                        } else {
-                            request.setAttribute("message", "Lỗi khi cập nhật số dư!");
-                            log("Failed to update balance for user " + userId);
-                        }
-                    } else {
-                        request.setAttribute("message", "Số dư của quý khách không đủ!");
-                        log("Insufficient balance for user " + userId + ": " + balance + " < " + finalPrice);
-                    }
-                    request.setAttribute("invoice", invoice);
-                } else {
-                    request.setAttribute("message", "Không tìm thấy thông tin người dùng!");
-                    log("User not found for userId: " + userId);
-                }
-            } else {
-                request.setAttribute("message", "Không tìm thấy thông tin hóa đơn!");
+            if (invoice == null) {
+                request.getSession().setAttribute("message", "Invoice information not found!");
                 log("Invoice not found for invoiceId: " + invoiceId);
+                response.sendRedirect(INVOICE_PAGE);
+                return;
             }
+
+            if (pdao.isInvoicePaid(invoiceId)) {
+                request.getSession().setAttribute("message", "This invoice has already been paid!");
+                request.getSession().setAttribute("invoiceId", invoiceId);
+                log("Invoice " + invoiceId + " already paid");
+                response.sendRedirect(INVOICE_PAGE);
+                return;
+            }
+
+            UserDTO user = udao.getUserById(userId);
+            if (user == null) {
+                request.getSession().setAttribute("message", "User information not found!");
+                log("User not found for userId: " + userId);
+                response.sendRedirect(INVOICE_PAGE);
+                return;
+            }
+
+            double balance = user.getBalance();
+            System.out.println("Balance of user " + userId + ": " + balance);
+            double finalPrice = invoice.getFinalPrice();
+
+            if (balance < finalPrice) {
+                request.getSession().setAttribute("message", "Insufficient balance!");
+                log("Insufficient balance for user " + userId + ": " + balance + " < " + finalPrice);
+                response.sendRedirect(INVOICE_PAGE);
+                return;
+            }
+
+            double newBalance = balance - finalPrice;
+            if (!udao.updateBalance(userId, newBalance)) {
+                request.getSession().setAttribute("message", "Error updating balance!");
+                log("Failed to update balance for user " + userId);
+                response.sendRedirect(INVOICE_PAGE);
+                return;
+            }
+
+            if (!pdao.createPayment(invoiceId, finalPrice)) {
+                udao.updateBalance(userId, balance); // Hoàn lại số dư
+                request.getSession().setAttribute("message", "Error recording payment!");
+                log("Failed to create payment record for invoice " + invoiceId + ", balance restored");
+                response.sendRedirect(INVOICE_PAGE);
+                return;
+            }
+
+            int orderId = invoice.getOrderID();
+            if (!odao.updateOrderStatus(orderId, "completed")) {
+                udao.updateBalance(userId, balance); // Hoàn lại số dư
+                pdao.deletePayment(invoiceId); // Xóa bản ghi thanh toán
+                request.getSession().setAttribute("message", "Error updating order status!");
+                log("Failed to update order status for order " + orderId);
+                response.sendRedirect(INVOICE_PAGE);
+                return;
+            }
+
+            // Cập nhật payment_method thành "balance"
+            if (!odao.updateOrderPayment(orderId)) {
+                log("Failed to update payment method for order " + orderId);
+            } else {
+                log("Payment method updated to 'balance' for order " + orderId);
+            }
+
+            // Thanh toán thành công
+            user.setBalance(newBalance);
+            request.getSession().setAttribute("user", user);
+            request.getSession().setAttribute("message", "Payment successful!");
+            request.getSession().setAttribute("invoiceId", invoiceId);
+            log("Payment successful for invoice " + invoiceId + ", order " + orderId + " completed, new balance: " + newBalance);
+
+            // Đánh dấu thanh toán thành công
+            isPaymentSuccessful = true;
+
+            // Chuyển hướng sau khi tất cả các bước hoàn tất
+            response.sendRedirect(INVOICE_PAGE);
+
         } catch (NumberFormatException e) {
-            request.setAttribute("message", "ID hóa đơn không hợp lệ!");
+            request.getSession().setAttribute("message", "Invalid invoice ID!");
             log("Error at processPayment - NumberFormatException: " + e.toString());
+            response.sendRedirect(INVOICE_PAGE);
         } catch (Exception e) {
-            request.setAttribute("message", "Lỗi khi xử lý thanh toán: " + e.getMessage());
-            log("Error at processPayment: " + e.toString());
+            String errorMessage = e.getMessage() != null ? e.getMessage() : "Unknown error";
+            log("Error at processPayment: " + errorMessage, e);
+            request.getSession().setAttribute("message", "Error processing payment: " + errorMessage);
+            response.sendRedirect(INVOICE_PAGE);
         }
 
-        return url;
+        // Gửi email xác nhận thanh toán sau khi tất cả các bước hoàn tất
+        if (isPaymentSuccessful) {
+            try {
+                int invoiceId = Integer.parseInt(invoiceIdStr); // Lấy lại invoiceId
+                InvoiceDTO invoice = idao.getInvoiceById(invoiceId);
+                if (invoice != null) {
+                    int orderId = invoice.getOrderID();
+                    OrderDTO order = odao.getOrderById(orderId);
+                    System.out.println(order);
+                    if (order == null) {
+                        log("Order not found for orderId: " + orderId + " when sending email");
+                    } else {
+                        List<OrderDetailDTO> details = oddao.getOrderDetailsByOrderId(orderId);
+                        if (details == null) {
+                            log("Order details not found (null) for orderId: " + orderId + " when sending email");
+                        } else if (details.isEmpty()) {
+                            log("Order details are empty for orderId: " + orderId + " when sending email");
+                        } else {
+                            UserDTO user = udao.getUserById(userId);
+                            if (user == null) {
+                                log("User not found for userId: " + userId + " when sending email");
+                            } else {
+                                String userName = user.getUserName() != null ? user.getUserName() : "Customer";
+                                String userEmail = user.getEmail();
+                                if (userEmail == null || userEmail.trim().isEmpty()) {
+                                    log("User email is null or empty for userId: " + userId + " when sending email");
+                                    //userEmail = "luongdz2vnvt@gmai.com"; // Thay bằng email của bạn để kiểm tra
+                                    log("Using default email for testing: " + userEmail);
+                                }
+                                boolean emailSent = EmailUtils.sendPaymentConfirmationEmail(order, details, userName, userEmail);
+                                if (emailSent) {
+                                    log("Payment confirmation email sent to " + userEmail);
+                                } else {
+                                    log("Failed to send payment confirmation email to " + userEmail);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    log("Invoice not found for invoiceId: " + invoiceId + " when sending email");
+                }
+            } catch (Exception e) {
+                log("Error sending payment confirmation email: " + e.getMessage(), e);
+            }
+        }
     }
 
-    private double calculateTotalPrice(int orderId) {
+    private double calculateTotalPrice(int orderId) throws ClassNotFoundException {
         List<OrderDetailDTO> details = oddao.getOrderDetailsByOrderId(orderId);
         double total = 0.0;
         for (OrderDetailDTO detail : details) {

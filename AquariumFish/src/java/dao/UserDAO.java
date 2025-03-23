@@ -103,6 +103,37 @@ public class UserDAO implements IDAO<UserDTO, String> {
         return null;
     }
 
+    public UserDTO findByEmail(String email) {
+        String sql = "SELECT * FROM Users WHERE email = ?";
+        try (Connection conn = DButils.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, email);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUserDTO(rs);
+                }
+            }
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
+        return null;
+    }
+    
+    private UserDTO mapResultSetToUserDTO(ResultSet rs) throws SQLException {
+        UserDTO user = new UserDTO();
+        user.setUserId(rs.getInt("userId")); // Giả định cột userId là khóa chính
+        user.setAccount(rs.getString("account"));
+        user.setUserName(rs.getString("userName"));
+        user.setEmail(rs.getString("email"));
+        user.setPassword(rs.getString("password"));
+        user.setPhone(rs.getString("phone"));
+        user.setAddress(rs.getString("address"));
+        user.setRole(rs.getString("roleId"));
+        user.setBalance(rs.getDouble("balance"));
+        return user;
+    }
+    
     public UserDTO readbyAccount(String account) {
         String sql = "SELECT * FROM [tblUser] WHERE [account] = ?";
         try {
@@ -135,6 +166,7 @@ public class UserDAO implements IDAO<UserDTO, String> {
         String sql = "UPDATE [tblUser] SET "
                 + "[userName] = ?, "
                 + "[email] = ?, "
+                + "[password] = ?, "
                 + "[phone] = ?, "
                 + "[address] = ?, "
                 + "[role] = ? "
@@ -143,10 +175,11 @@ public class UserDAO implements IDAO<UserDTO, String> {
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, entity.getUserName());
             ps.setString(2, entity.getEmail());
-            ps.setString(3, entity.getPhone());
-            ps.setString(4, entity.getAddress());
-            ps.setString(5, entity.getRole());
-            ps.setInt(6, entity.getUserId());
+            ps.setString(3, entity.getPassword());
+            ps.setString(4, entity.getPhone());
+            ps.setString(5, entity.getAddress());
+            ps.setString(6, entity.getRole());
+            ps.setInt(7, entity.getUserId());
             return ps.executeUpdate() > 0;
         } catch (ClassNotFoundException | SQLException ex) {
             Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, null, ex);

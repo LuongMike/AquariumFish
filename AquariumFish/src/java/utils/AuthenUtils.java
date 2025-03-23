@@ -30,9 +30,12 @@ public class AuthenUtils {
 
     public static boolean isValidLogin(String account, String password) {
         UserDTO user = getUser(account);
-        return user != null && user.getPassword().equals(password);
+        if (user != null && PasswordUtils.checkPassword(password, user.getPassword())) {
+            return true;
+        } else {
+            return false;
+        }
     }
-
     public static boolean isLoggedIn(HttpSession session) {
         return session.getAttribute("user") != null;
     }
