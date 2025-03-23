@@ -21,12 +21,30 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>Danh sách cá</title>
-        <link rel="stylesheet" href="assets/css/index.css">
         <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f0f8ff;
+                margin: 0;
+                padding: 0;
+            }
+
+            .container {
+                width: 90%;
+                max-width: 1200px;
+                margin: 50px auto;
+                background: #e0f7fa;
+                padding: 20px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                border-radius: 10px;
+            }
+
             h1 {
                 text-align: center;
                 color: #2c3e50;
+                margin-bottom: 20px;
             }
+
             /* Filter Section */
             .filter-section {
                 text-align: center;
@@ -40,12 +58,137 @@
             .filter-label {
                 font-weight: bold;
                 margin-right: 10px;
+                color: #333;
             }
 
             .filter-select {
-                padding: 5px;
-                border-radius: 4px;
+                padding: 8px;
+                border-radius: 5px;
                 border: 1px solid #ccc;
+                font-size: 14px;
+                background: url('data:image/svg+xml;utf8,<svg fill="gray" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 10px center;
+                background-size: 16px;
+                appearance: none;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+            }
+
+            .filter-select:focus {
+                outline: none;
+                border-color: #0077cc;
+            }
+
+            /* Discount Container */
+            .discount-container {
+                margin-top: 20px;
+            }
+
+            .total-fish {
+                text-align: center;
+                font-weight: bold;
+                color: #333;
+                margin-bottom: 15px;
+            }
+
+            .table-wrapper {
+                overflow-x: auto;
+            }
+
+            .discount-table {
+                width: 100%;
+                border-collapse: collapse;
+                background-color: #fff;
+                border-radius: 5px;
+                overflow: hidden;
+            }
+
+            .discount-table th,
+            .discount-table td {
+                padding: 12px;
+                text-align: left;
+                border-bottom: 1px solid #ddd;
+            }
+
+            .discount-table th {
+                background-color: #0077cc;
+                color: white;
+                font-weight: bold;
+            }
+
+            .discount-table tr:hover {
+                background-color: #f5f5f5;
+            }
+
+            .discount-table .table-image {
+                max-width: 80px;
+                height: auto;
+                border-radius: 5px;
+            }
+
+            .discount-table a {
+                color: #0077cc;
+                text-decoration: none;
+                font-weight: bold;
+            }
+
+            .discount-table a:hover {
+                text-decoration: underline;
+            }
+
+            .discount-table .no-data {
+                text-align: center;
+                color: #666;
+                font-style: italic;
+                padding: 20px;
+            }
+
+            /* Pagination */
+            .pagination {
+                text-align: center;
+                margin: 20px 0;
+            }
+
+            .pagination-link {
+                display: inline-block;
+                padding: 8px 12px;
+                margin: 0 5px;
+                background-color: #0077cc;
+                color: white;
+                text-decoration: none;
+                border-radius: 5px;
+                transition: background-color 0.3s;
+            }
+
+            .pagination-link:hover {
+                background-color: #005fa3;
+            }
+
+            .pagination-link.active {
+                background-color: #005fa3;
+                font-weight: bold;
+            }
+
+            .pagination-link.disabled {
+                background-color: #ccc;
+                pointer-events: none;
+            }
+
+            /* Back Link */
+            .back-link {
+                display: block;
+                text-align: center;
+                background-color: #0077cc;
+                color: white;
+                padding: 10px 20px;
+                text-decoration: none;
+                border-radius: 5px;
+                font-weight: bold;
+                margin-top: 20px;
+                transition: background-color 0.3s;
+            }
+
+            .back-link:hover {
+                background-color: #005fa3;
             }
         </style>
     </head>
@@ -62,7 +205,7 @@
                     <input type="hidden" name="page" value="<%= currentPage != null ? currentPage : 1%>">
                     <label for="categoryFilter" class="filter-label">Lọc theo danh mục:</label>
                     <select name="categoryFilter" id="categoryFilter" class="filter-select" onchange="this.form.submit()">
-                        <option value="">Tất cả danh mục</option>
+
                         <%
                             if (categories != null) {
                                 for (CategoryDTO category : categories) {
@@ -110,7 +253,7 @@
                                 <td><%= String.format("%,.0f", d.getFishPrice())%> VND</td>
                                 <td><%= d.getFishQuantity()%></td>
                                 <td><img src="<%= d.getFishImg()%>" alt="Fish Image" class="table-image"></td>
-                                <td><a href="FishController?action=details&id=<%= d.getFishID() %>">Xem Chi Tiết</a></td>
+                                <td><a href="FishController?action=details&id=<%= d.getFishID()%>">Xem Chi Tiết</a></td>
                             </tr>
                             <%
                                 }

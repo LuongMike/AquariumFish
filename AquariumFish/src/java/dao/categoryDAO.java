@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package dao;
 
 import dto.CategoryDTO;
@@ -16,10 +11,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import utils.DButils;
 
-/**
- *
- * @author PC
- */
 public class categoryDAO implements IDAO<CategoryDTO, String> {
 
     @Override
@@ -29,23 +20,22 @@ public class categoryDAO implements IDAO<CategoryDTO, String> {
 
     @Override
     public List<CategoryDTO> readAll() {
-        List<CategoryDTO> list = new ArrayList<CategoryDTO>();
-        String sql = "SELECT * FROM tblCategory";
-        try {
-            Connection conn = DButils.getConnection();
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery();
+        List<CategoryDTO> list = new ArrayList<>();
+        String sql = "SELECT categoryID, categoryName FROM tblCategory";
+        try (Connection conn = DButils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                CategoryDTO user = new CategoryDTO(
+                CategoryDTO category = new CategoryDTO(
                         rs.getString("categoryID"),
                         rs.getString("categoryName")
                 );
-                list.add(user);
+                list.add(category);
             }
+            Logger.getLogger(categoryDAO.class.getName()).log(Level.INFO, "Successfully retrieved {0} categories", list.size());
         } catch (ClassNotFoundException | SQLException ex) {
-            Logger.getLogger(UserDAO.class.getName()).log(Level.SEVERE, null, ex);
-
-        } 
+            Logger.getLogger(categoryDAO.class.getName()).log(Level.SEVERE, "Error retrieving categories", ex);
+        }
         return list;
     }
 

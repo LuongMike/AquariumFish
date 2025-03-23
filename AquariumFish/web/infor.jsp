@@ -117,13 +117,12 @@
 
             <% if (user != null) {%>
             <table border="1">
-                <tr><th>User ID</th><td><%= user.getUserId()%></td></tr>
-                <tr><th>User Name</th><td><%= user.getUserName()%></td></tr>
-                <tr><th>Account</th><td><%= user.getAccount()%></td></tr>
+                <tr><th>ID Người Dùng</th><td><%= user.getUserId()%></td></tr>
+                <tr><th>Tên Người Dùng</th><td><%= user.getUserName()%></td></tr>
                 <tr><th>Email</th><td><%= user.getEmail()%></td></tr>
-                <tr><th>Phone</th><td><%= user.getPhone()%></td></tr>
-                <tr><th>Address</th><td><%= user.getAddress()%></td></tr>
-                <tr><th>Role</th><td><%= user.getRole()%></td></tr>
+                <tr><th>Số Điện Thoại</th><td><%= user.getPhone()%></td></tr>
+                <tr><th>Địa Chỉ</th><td><%= user.getAddress()%></td></tr>
+                <tr><th>Vai Trò</th><td><%= user.getRole()%></td></tr>
                 <tr><th>Số Dư</th><td><%= user.getBalance() %> VND</td></tr>
             </table>
 

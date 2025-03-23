@@ -6,19 +6,189 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>Product List</title>
-        <link rel="stylesheet" href="assets/css/product.css"/>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f0f8ff;
+                margin: 0;
+                padding: 0;
+            }
+
+            .container {
+                width: 90%;
+                max-width: 1200px;
+                margin: 50px auto;
+                background: #e0f7fa;
+                padding: 20px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                border-radius: 10px;
+            }
+
+            h1 {
+                color: #0077cc;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            h2 {
+                color: #005fa3;
+                margin: 20px 0 10px;
+                font-size: 24px;
+            }
+
+            .error {
+                color: red;
+                font-weight: bold;
+                text-align: center;
+                margin-bottom: 15px;
+            }
+
+            .add-button {
+                display: inline-block;
+                background-color: #0077cc;
+                color: white;
+                padding: 10px 20px;
+                text-decoration: none;
+                border-radius: 5px;
+                margin-bottom: 20px;
+                font-weight: bold;
+                transition: background-color 0.3s;
+            }
+
+            .add-button:hover {
+                background-color: #005fa3;
+            }
+
+            form {
+                display: flex;
+                justify-content: center;
+                margin-bottom: 20px;
+            }
+
+            form input[type="text"] {
+                width: 300px;
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 5px 0 0 5px;
+                font-size: 14px;
+            }
+
+            form input[type="submit"] {
+                background-color: #0077cc;
+                color: white;
+                border: none;
+                padding: 8px 15px;
+                border-radius: 0 5px 5px 0;
+                cursor: pointer;
+                font-size: 14px;
+                transition: background-color 0.3s;
+            }
+
+            form input[type="submit"]:hover {
+                background-color: #005fa3;
+            }
+
+            .discount-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+                background-color: #fff;
+                border-radius: 5px;
+                overflow: hidden;
+            }
+
+            .discount-table th, .discount-table td {
+                padding: 12px;
+                text-align: left;
+                border-bottom: 1px solid #ddd;
+            }
+
+            .discount-table th {
+                background-color: #0077cc;
+                color: white;
+                font-weight: bold;
+            }
+
+            .discount-table tr:hover {
+                background-color: #f5f5f5;
+            }
+
+            .discount-table img {
+                max-width: 80px;
+                height: auto;
+                border-radius: 5px;
+            }
+
+            .discount-table a {
+                color: #0077cc;
+                text-decoration: none;
+                font-weight: bold;
+            }
+
+            .discount-table a:hover {
+                text-decoration: underline;
+            }
+
+            .pagination {
+                text-align: center;
+                margin: 20px 0;
+            }
+
+            .pagination-link {
+                display: inline-block;
+                padding: 8px 12px;
+                margin: 0 5px;
+                background-color: #0077cc;
+                color: white;
+                text-decoration: none;
+                border-radius: 5px;
+                transition: background-color 0.3s;
+            }
+
+            .pagination-link:hover {
+                background-color: #005fa3;
+            }
+
+            .pagination-link.disabled {
+                background-color: #ccc;
+                pointer-events: none;
+            }
+
+            .no-data {
+                text-align: center;
+                color: #666;
+                font-style: italic;
+                margin: 20px 0;
+            }
+
+            .back-link {
+                display: inline-block;
+                text-align: center;
+                background-color: #0077cc;
+                color: white;
+                padding: 10px 20px;
+                text-decoration: none;
+                border-radius: 5px;
+                font-weight: bold;
+                transition: background-color 0.3s;
+            }
+
+            .back-link:hover {
+                background-color: #005fa3;
+            }
+        </style>
     </head>
     <body>
         <jsp:include page="header.jsp" />
 
         <div class="container">
-            <h1>Product List</h1>
+            <h1>Danh Sách Sản Phẩm</h1>
             <% if (request.getAttribute("message") != null) {%>
             <p class="error"><%= request.getAttribute("message")%></p>
             <% }%>
             <%if (AuthenUtils.isAdmin(session)) {
             %>
-            <a href="add.jsp" class="add-button">Add Product</a> <!-- Nút thêm mới -->
+            <a href="add.jsp" class="add-button">Thêm Sản Phẩm</a> <!-- Nút thêm mới -->
             <%}%>
             <form action="FishController" method="get">
                 <input type="hidden" name="action" value="viewProducts">
@@ -57,15 +227,15 @@
         <h2><%= currentFishType%></h2>
         <table class="discount-table">
             <tr>
-                <th>Image</th>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Quantity</th>
-                <th>Description</th>
+                <th>Ảnh Sản Phẩm</th>
+                <th>Tên Sản Phẩm</th>
+                <th>Giá</th>
+                <th>Số Lượng</th>
+                <th>Mô Tả</th>
                 <th>Xem Chi Tiết</th>
                     <%if (AuthenUtils.isAdmin(session)) {
                     %>
-                <th>action</th>
+                <th>Hành Động</th>
                     <%}%>
             </tr>
             <%
@@ -77,7 +247,7 @@
                 <td>$<%= String.format("%,.2f", fish.getFishPrice())%></td>
                 <td><%= fish.getFishQuantity()%></td>
                 <td><%= fish.getFishDescription()%></td>
-                <td><a href="FishController?action=details&id=<%= fish.getFishID() %>">Xem Chi Tiết</a></td>
+                <td><a href="FishController?action=details&id=<%= fish.getFishID()%>">Xem Chi Tiết</a></td>
                 <%if (AuthenUtils.isAdmin(session)) {
                 %>
                 <td><a href="FishController?action=delete&id=<%=fish.getFishID()%>">
