@@ -220,7 +220,7 @@ public class FishDAO implements IDAO<FishDTO, String> {
     public List<FishDTO> getFishByCategory(int categoryID) {
         List<FishDTO> fishList = new ArrayList<>();
         String sql = "SELECT f.fishID, f.fishType, f.fishName, f.fishPrice, f.fishQuantity, f.fishDescription, f.fishImg, f.categoryID, c.categoryName " +
-                    "FROM tblFish f JOIN tblCategory c ON f.categoryID = c.categoryID WHERE f.categoryID = ?";
+                    "FROM tblFish f JOIN tblCategory c ON f.categoryID = c.categoryID WHERE f.categoryID = ? AND f.fishQuantity > 0";
 
         try {
             Connection conn = DButils.getConnection();

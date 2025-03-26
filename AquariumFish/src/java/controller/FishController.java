@@ -367,6 +367,16 @@ public class FishController extends HttpServlet {
                     request.setAttribute("categoryID_error", "Vui lòng chọn danh mục 1 hoặc 2.");
                     checkError = true;
                 }
+                if (base64Image == null || base64Image.trim().isEmpty()) {
+                    request.setAttribute("fishImg_error", "Hình ảnh không được để trống. Vui lòng chọn một hình ảnh.");
+                    checkError = true;
+                }
+                if (base64Image != null && !base64Image.trim().isEmpty()) {
+                    if (!base64Image.startsWith("data:image/")) {
+                        request.setAttribute("fishImg_error", "Hình ảnh không hợp lệ. Vui lòng chọn một hình ảnh đúng định dạng.");
+                        checkError = true;
+                    }
+                }
 
                 // Nếu không có lỗi, tạo FishDTO và thêm vào database
                 if (!checkError) {
@@ -445,7 +455,9 @@ public class FishController extends HttpServlet {
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+
         String url = MAIN_PAGE;
         try {
             String action = request.getParameter("action");

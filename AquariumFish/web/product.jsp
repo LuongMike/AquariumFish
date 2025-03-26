@@ -192,7 +192,7 @@
             <%}%>
             <form action="FishController" method="get">
                 <input type="hidden" name="action" value="viewProducts">
-                <input type="text" name="searchTerm" placeholder="Search by type, name..." value="<%= request.getParameter("searchTerm") != null ? request.getParameter("searchTerm") : ""%>">
+                <input type="text" name="searchTerm" placeholder="Tìm kiếm bằng tên, loại cá,....." value="<%= request.getParameter("searchTerm") != null ? request.getParameter("searchTerm") : ""%>">
                 <input type="submit" value="Search"/>
             </form>
 
@@ -244,7 +244,7 @@
             <tr>
                 <td><img src="<%= fish.getFishImg()%>" alt="Image"></td>
                 <td><%= fish.getFishName()%></td>
-                <td>$<%= String.format("%,.2f", fish.getFishPrice())%></td>
+                <td><%= String.format("%,.0f", fish.getFishPrice())%> VND</td>                
                 <td><%= fish.getFishQuantity()%></td>
                 <td><%= fish.getFishDescription()%></td>
                 <td><a href="FishController?action=details&id=<%= fish.getFishID()%>">Xem Chi Tiết</a></td>

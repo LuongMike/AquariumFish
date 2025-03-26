@@ -123,7 +123,7 @@
                 <tr><th>Số Điện Thoại</th><td><%= user.getPhone()%></td></tr>
                 <tr><th>Địa Chỉ</th><td><%= user.getAddress()%></td></tr>
                 <tr><th>Vai Trò</th><td><%= user.getRole()%></td></tr>
-                <tr><th>Số Dư</th><td><%= user.getBalance() %> VND</td></tr>
+                <tr><th>Số Dư</th><td><%= String.format("%,.0f", user.getBalance())%> VND</td></tr>
             </table>
 
             <div class="history-section">

@@ -114,7 +114,7 @@
                     <td><%= d.getDiscoutID()%></td>
                     <td><%= d.getCode()%></td>
                     <td><%= d.getDiscount_percentage()%>%</td>
-                    <td><%= d.getDiscount_amount()%> VND</td>
+                    <td><%= String.format("%,.0f", d.getDiscount_amount())%> VND</td>
                     <td><%= d.getStart_date()%></td>
                     <td><%= d.getEnd_date()%></td>
                     <td><%= d.getStatus()%></td>

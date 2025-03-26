@@ -251,6 +251,9 @@
                         <option value="1" <%= "1".equals(request.getAttribute("categoryID")) ? "selected" : ""%>>Danh mục 1</option>
                         <option value="2" <%= "2".equals(request.getAttribute("categoryID")) ? "selected" : ""%>>Danh mục 2</option>
                     </select>
+                    <% if (request.getAttribute("categoryID_error") != null) {%>
+                    <span class="error"><%= request.getAttribute("categoryID_error")%></span>
+                    <% }%>
                 </div>
 
                 <div class="form-group">
@@ -266,6 +269,9 @@
                         <img src="<%= request.getAttribute("fishImg")%>" alt="Xem trước">
                         <% }%>
                     </div>
+                    <% if (request.getAttribute("fishImg_error") != null) {%>
+                    <span class="error"><%= request.getAttribute("fishImg_error")%></span>
+                    <% }%>
                 </div>
 
                 <div class="form-group">

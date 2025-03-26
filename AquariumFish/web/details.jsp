@@ -241,7 +241,7 @@
                             <button type="button" onclick="changeQuantity('quantity-add', -1)"><i class="fas fa-minus"></i></button>
                             <input type="number" id="quantity-add" name="quantity" value="1" min="1" max="<%= fish.getFishQuantity()%>" required readonly>
                             <button type="button" onclick="changeQuantity('quantity-add', 1)"><i class="fas fa-plus"></i></button>                        </div>
-                        <button type="submit" class="btn add-to-cart">Add to Cart</button>
+                        <button type="submit" class="btn add-to-cart">Thêm Sản Phẩm</button>
                     </form>
                     <form action="<%= request.getContextPath()%>/CartController" method="post">
                         <input type="hidden" name="fishId" value="<%= fish.getFishID()%>">

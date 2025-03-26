@@ -256,8 +256,6 @@
                     <span class="error"><%= request.getAttribute("fishDescription_error")%></span>
                     <% }%>
                 </div>
-                Category 1 is Freshwater Fish <br/>
-                Category 2 is Saltwater Fish <br/>
                 <div class="form-group">
                     <label for="categoryID">Danh mục:</label>
                     <select id="categoryID" name="categoryID">

@@ -194,7 +194,7 @@
                 <div class="search-bar">
                     <form action="FishController" method="get">
                         <input type="hidden" name="action" value="viewProducts">
-                        <input type="text" name="searchTerm" placeholder="Search by type, name..." required>
+                        <input type="text" name="searchTerm" placeholder="Tìm kiếm bằng tên, loại cá,....." required>
                         <input type="submit" value="Search"/>
                     </form>
                 </div>
@@ -206,7 +206,7 @@
                         if (user != null) { // Nếu đã đăng nhập
 %>
                     Xin chào, <a href="infor.jsp?accountUser=<%= user.getAccount()%>" style="color: #333"><%= user.getUserName()%></a>
-                    <span class="balance">Số dư: <%= user.getBalance() %> VND</span>
+                    <span class="balance">Số dư: <%= String.format("%,.0f", user.getBalance())%> VND</span>
                     <a href="logout.jsp" style="color: red;">Đăng Xuất</a>
                     <%
                     } else { // Nếu chưa đăng nhập
@@ -228,7 +228,7 @@
                 <a href="discount.jsp">Giảm giá</a>
                 <a href="fishTankModel.jsp">Mẫu hồ cá</a>
                 <a href="knowledge.jsp">Kiến thức</a>
-                <a href="#">Giới thiệu</a>
+                <a href="about.jsp">Giới thiệu</a>
             </nav>
         </header>
     </body>

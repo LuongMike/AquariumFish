@@ -175,6 +175,8 @@
 
             /* Back Link */
             .back-link {
+                width: 15%;
+                margin-left: 43%;
                 display: block;
                 text-align: center;
                 background-color: #0077cc;
